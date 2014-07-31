@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"time"
 
 	redigo "github.com/garyburd/redigo/redis"
@@ -9,11 +10,15 @@ import (
 
 const Unlimited = 0
 
-var DefaultConfig = Config{
-	MaxOpenConnections: Unlimited,
-	MaxIdleConnections: 10,
-	IdleTimeout:        0,
-}
+var (
+	DefaultConfig = Config{
+		MaxOpenConnections: Unlimited,
+		MaxIdleConnections: 10,
+		IdleTimeout:        0,
+	}
+
+	ErrPoolExhausted = errors.New("connection pool exhausted")
+)
 
 type Config struct {
 	MaxOpenConnections int
@@ -59,7 +64,17 @@ type pool struct {
 
 func (s *pool) GetConnection() (PooledConnection, error) {
 	c := s.p.Get()
-	// TODO this should bomb when no more connections are available
+
+	// Force acquisition of an underlying connection:
+	// https://github.com/garyburd/redigo/blob/master/redis/pool.go#L138
+	if err := c.Err(); err != nil {
+		c.Close()
+		if err.Error() == "redigo: connection pool exhausted" {
+			return nil, ErrPoolExhausted
+		} else {
+			return nil, err
+		}
+	}
 
 	return &connection{pool: s, c: c}, nil
 }
