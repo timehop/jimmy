@@ -185,6 +185,11 @@ func (s *connection) SAdd(key string, members ...string) (int, error) {
 	return redigo.Int(s.Do("SADD", redigo.Args{key}.AddFlat(members)...))
 }
 
+func (s *connection) SCard(key string) (int, error) {
+	// Returns number of elements in set
+	return redigo.Int(s.Do("SCARD", key))
+}
+
 // Commands - Sorted sets
 
 func (s *connection) ZAdd(key string, score float64, value string) (int, error) {

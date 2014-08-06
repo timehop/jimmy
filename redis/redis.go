@@ -36,6 +36,7 @@ type Commands interface {
 	// Sets - http://redis.io/commands#generic
 
 	SAdd(key string, members ...string) (int, error)
+	SCard(key string) (int, error)
 
 	// Sorted Sets - http://redis.io/commands#sorted_set
 

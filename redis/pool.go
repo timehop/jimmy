@@ -287,6 +287,16 @@ func (s *pool) SAdd(key string, members ...string) (int, error) {
 	return c.SAdd(key, members...)
 }
 
+func (s *pool) SCard(key string) (int, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer s.Return(c)
+
+	return c.SCard(key)
+}
+
 // Commands - Sorted sets
 
 func (s *pool) ZAdd(key string, score float64, value string) (int, error) {
