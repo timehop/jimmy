@@ -174,6 +174,10 @@ func (s *connection) LPush(key string, values ...string) (int, error) {
 	return redigo.Int(s.Do("LPUSH", redigo.Args{key}.AddFlat(values)...))
 }
 
+func (s *connection) RPop(key string) (string, error) {
+	return redigo.String(s.Do("RPOP", key))
+}
+
 func (s *connection) RPush(key string, values ...string) (int, error) {
 	return redigo.Int(s.Do("RPUSH", redigo.Args{key}.AddFlat(values)...))
 }

@@ -31,6 +31,7 @@ type Commands interface {
 	LLen(key string) (int, error)
 	LPop(key string) (string, error)
 	LPush(key string, values ...string) (int, error)
+	RPop(key string) (string, error)
 	RPush(key string, values ...string) (int, error)
 
 	// Sets - http://redis.io/commands#generic
@@ -67,7 +68,9 @@ type NoResultCommands interface {
 
 	// Lists - http://redis.io/commands#list
 
+	LPop(key string) error
 	LPush(key string, values ...string) error
+	RPop(key string) error
 	RPush(key string, values ...string) error
 
 	// Sets - http://redis.io/commands#generic

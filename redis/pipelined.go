@@ -63,8 +63,16 @@ func (s *sendOnlyConnection) HSet(key string, field string, value string) error 
 
 // NoResultCommands - Lists
 
+func (s *sendOnlyConnection) LPop(key string) error {
+	return s.count(s.c.Send("LPOP", key))
+}
+
 func (s *sendOnlyConnection) LPush(key string, values ...string) error {
 	return s.count(s.c.Send("LPUSH", redigo.Args{key}.AddFlat(values)...))
+}
+
+func (s *sendOnlyConnection) RPop(key string) error {
+	return s.count(s.c.Send("RPOP", key))
 }
 
 func (s *sendOnlyConnection) RPush(key string, values ...string) error {
