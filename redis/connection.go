@@ -138,6 +138,10 @@ func (s *connection) HGet(key, field string) (string, error) {
 	return redigo.String(s.Do("HGET", key, field))
 }
 
+func (s *connection) HIncrBy(key, field string, value int64) (int64, error) {
+	return redigo.Int64(s.Do("HINCRBY", key, field, value))
+}
+
 func (s *connection) HSet(key string, field string, value string) (bool, error) {
 	return redigo.Bool(s.Do("HSET", key, field, value))
 }

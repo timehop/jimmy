@@ -57,6 +57,10 @@ func (s *sendOnlyConnection) HGet(key, field string) error {
 	return s.count(s.c.Send("HGET", key, field))
 }
 
+func (s *sendOnlyConnection) HIncrBy(key, field string, value int64) error {
+	return s.count(s.c.Send("HINCRBY", key, field, value))
+}
+
 func (s *sendOnlyConnection) HSet(key string, field string, value string) error {
 	return s.count(s.c.Send("HSET", key, field, value))
 }

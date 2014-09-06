@@ -203,6 +203,16 @@ func (s *pool) HGet(key, field string) (string, error) {
 	return c.HGet(key, field)
 }
 
+func (s *pool) HIncrBy(key, field string, value int64) (int64, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer s.Return(c)
+
+	return c.HIncrBy(key, field, value)
+}
+
 func (s *pool) HSet(key string, field string, value string) (bool, error) {
 	c, err := s.GetConnection()
 	if err != nil {
