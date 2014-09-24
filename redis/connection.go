@@ -209,36 +209,13 @@ func (s *connection) ZCard(key string) (int, error) {
 	return redigo.Int(s.Do("ZCARD", key))
 }
 
-func (s *connection) ZRangeByScore(key, start, stop string) ([]string, error) {
-	reply, err := redigo.Values(s.Do("ZRANGEBYSCORE", key, start, stop))
-	if err != nil {
-		return nil, err
-	}
-
-	values := make([]string, 0, len(reply))
-	for _, r := range reply {
-		if b, ok := r.([]byte); ok {
-			values = append(values, string(b))
-		}
-	}
-
-	return values, nil
+func (s *connection) ZRangeByScore(key, start, stop string, options ...interface{}) ([]string, error) {
+	return redigo.Strings(s.Do("ZRANGEBYSCORE", redigo.Args{key, start, stop}.AddFlat(options)...))
 }
 
+// KC: Deprecated. Please use ZRangeByScore(key, start, stop, "LIMIT", 0, 1)
 func (s *connection) ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error) {
-	reply, err := redigo.Values(s.Do("ZRANGEBYSCORE", key, start, stop, "LIMIT", fmt.Sprint(offset), fmt.Sprint(count)))
-	if err != nil {
-		return nil, err
-	}
-
-	values := make([]string, 0, len(reply))
-	for _, r := range reply {
-		if b, ok := r.([]byte); ok {
-			values = append(values, string(b))
-		}
-	}
-
-	return values, nil
+	return redigo.Strings(s.Do("ZRANGEBYSCORE", key, start, stop, "LIMIT", fmt.Sprint(offset), fmt.Sprint(count)))
 }
 
 func (s *connection) ZRem(key string, members ...string) (int, error) {

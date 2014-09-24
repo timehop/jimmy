@@ -339,14 +339,14 @@ func (s *pool) ZCard(key string) (int, error) {
 	return c.ZCard(key)
 }
 
-func (s *pool) ZRangeByScore(key, start, stop string) ([]string, error) {
+func (s *pool) ZRangeByScore(key, start, stop string, options ...interface{}) ([]string, error) {
 	c, err := s.GetConnection()
 	if err != nil {
 		return nil, err
 	}
 	defer s.Return(c)
 
-	return c.ZRangeByScore(key, start, stop)
+	return c.ZRangeByScore(key, start, stop, options...)
 }
 
 func (s *pool) ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error) {

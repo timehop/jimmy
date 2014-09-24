@@ -44,7 +44,7 @@ type Commands interface {
 
 	ZAdd(key string, score float64, value string) (int, error)
 	ZCard(key string) (int, error)
-	ZRangeByScore(key, start, stop string) ([]string, error)
+	ZRangeByScore(key, start, stop string, options ...interface{}) ([]string, error)
 	ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error)
 	ZRem(key string, members ...string) (removed int, err error)
 }
