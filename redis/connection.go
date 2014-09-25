@@ -215,6 +215,10 @@ func (s *connection) SPop(key string) (string, error) {
 	return redigo.String(s.Do("SPOP", key))
 }
 
+func (s *connection) SMembers(key string) ([]string, error) {
+	return redigo.Strings(s.Do("SMEMBERS", key))
+}
+
 // Commands - Sorted sets
 
 func (s *connection) ZAdd(key string, score float64, value string) (int, error) {

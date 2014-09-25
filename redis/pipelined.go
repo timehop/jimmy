@@ -101,6 +101,10 @@ func (s *sendOnlyConnection) SPop(key string) error {
 	return s.count(s.c.Send("SPOP", key))
 }
 
+func (s *sendOnlyConnection) SMembers(key string) error {
+	return s.count(s.c.Send("SMEMBERS", key))
+}
+
 // NoResultCommands - Sorted Sets
 
 func (s *sendOnlyConnection) ZAdd(key string, score float64, value string) error {

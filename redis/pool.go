@@ -347,6 +347,16 @@ func (s *pool) SPop(key string) (string, error) {
 	return c.SPop(key)
 }
 
+func (s *pool) SMembers(key string) ([]string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.SMembers(key)
+}
+
 // Commands - Sorted sets
 
 func (s *pool) ZAdd(key string, score float64, value string) (int, error) {

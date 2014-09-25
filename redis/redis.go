@@ -42,6 +42,7 @@ type Commands interface {
 	SCard(key string) (int, error)
 	SRem(key, member string) (bool, error)
 	SPop(key string) (string, error)
+	SMembers(key string) ([]string, error)
 
 	// Sorted Sets - http://redis.io/commands#sorted_set
 
@@ -84,6 +85,7 @@ type NoResultCommands interface {
 	SAdd(key string, members ...string) error
 	SRem(key, member string) error
 	SPop(key string) error
+	SMembers(key string) error
 
 	// Sorted Sets - http://redis.io/commands#sorted_set
 
