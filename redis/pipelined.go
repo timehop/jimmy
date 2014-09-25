@@ -37,6 +37,10 @@ func (s *sendOnlyConnection) Exists(key string) error {
 	return s.count(s.c.Send("EXISTS", key))
 }
 
+func (s *sendOnlyConnection) Rename(key, newKey string) error {
+	return s.count(s.c.Send("RENAME", key, newKey))
+}
+
 // NoResultCommands - Strings
 
 func (s *sendOnlyConnection) Get(key string) error {

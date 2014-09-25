@@ -116,6 +116,11 @@ func (s *connection) Exists(key string) (bool, error) {
 	return redigo.Bool(s.Do("EXISTS", key))
 }
 
+func (s *connection) Rename(key, newKey string) error {
+	_, err := s.Do("RENAME", key, newKey)
+	return err
+}
+
 // Commands - Strings
 
 func (s *connection) Get(key string) (string, error) {

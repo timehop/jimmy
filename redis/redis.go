@@ -12,6 +12,7 @@ type Commands interface {
 
 	Del(keys ...string) (int, error)
 	Exists(key string) (bool, error)
+	Rename(key, newKey string) error
 
 	// Strings - http://redis.io/commands#string
 
@@ -57,6 +58,7 @@ type NoResultCommands interface {
 
 	Del(keys ...string) error
 	Exists(key string) error
+	Rename(key, newKey string) error
 
 	// Strings - http://redis.io/commands#string
 

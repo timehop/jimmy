@@ -159,6 +159,16 @@ func (s *pool) Exists(key string) (bool, error) {
 	return c.Exists(key)
 }
 
+func (s *pool) Rename(key, newKey string) error {
+	c, err := s.GetConnection()
+	if err != nil {
+		return err
+	}
+	defer s.Return(c)
+
+	return c.Rename(key, newKey)
+}
+
 // Commands - Strings
 
 func (s *pool) Get(key string) (string, error) {
