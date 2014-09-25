@@ -198,6 +198,18 @@ func (s *connection) SCard(key string) (int, error) {
 	return redigo.Int(s.Do("SCARD", key))
 }
 
+func (s *connection) SRem(key, member string) (bool, error) {
+	reply, err := redigo.Int(s.Do("SREM", key, member))
+	if err != nil {
+		return false, err
+	}
+	return reply > 0, nil
+}
+
+func (s *connection) SPop(key string) (string, error) {
+	return redigo.String(s.Do("SPOP", key))
+}
+
 // Commands - Sorted sets
 
 func (s *connection) ZAdd(key string, score float64, value string) (int, error) {

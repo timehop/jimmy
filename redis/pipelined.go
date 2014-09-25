@@ -89,6 +89,14 @@ func (s *sendOnlyConnection) SAdd(key string, members ...string) error {
 	return s.count(s.c.Send("SADD", redigo.Args{key}.AddFlat(members)...))
 }
 
+func (s *sendOnlyConnection) SRem(key, member string) error {
+	return s.count(s.c.Send("SREM", key, member))
+}
+
+func (s *sendOnlyConnection) SPop(key string) error {
+	return s.count(s.c.Send("SPOP", key))
+}
+
 // NoResultCommands - Sorted Sets
 
 func (s *sendOnlyConnection) ZAdd(key string, score float64, value string) error {

@@ -317,6 +317,26 @@ func (s *pool) SCard(key string) (int, error) {
 	return c.SCard(key)
 }
 
+func (s *pool) SRem(key, member string) (bool, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return false, err
+	}
+	defer s.Return(c)
+
+	return c.SRem(key, member)
+}
+
+func (s *pool) SPop(key string) (string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return "", err
+	}
+	defer s.Return(c)
+
+	return c.SPop(key)
+}
+
 // Commands - Sorted sets
 
 func (s *pool) ZAdd(key string, score float64, value string) (int, error) {
