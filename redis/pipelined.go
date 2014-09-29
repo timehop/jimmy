@@ -55,6 +55,10 @@ func (s *sendOnlyConnection) SetEx(key, value string, expire int) error {
 	return s.count(s.c.Send("SETEX", key, expire, value))
 }
 
+func (s *sendOnlyConnection) Incr(key string) error {
+	return s.count(s.c.Send("INCR", key))
+}
+
 // Commands - Hashes
 
 func (s *sendOnlyConnection) HGet(key, field string) error {

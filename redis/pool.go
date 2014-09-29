@@ -201,6 +201,16 @@ func (s *pool) SetEx(key, value string, expire int) error {
 	return c.SetEx(key, value, expire)
 }
 
+func (s *pool) Incr(key string) (int, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer s.Return(c)
+
+	return c.Incr(key)
+}
+
 // Commands - Hashes
 
 func (s *pool) HGet(key, field string) (string, error) {

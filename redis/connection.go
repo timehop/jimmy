@@ -137,6 +137,10 @@ func (s *connection) SetEx(key, value string, expire int) error {
 	return err
 }
 
+func (s *connection) Incr(key string) (int, error) {
+	return redigo.Int(s.Do("INCR", key))
+}
+
 // Commands - Hashes
 
 func (s *connection) HGet(key, field string) (string, error) {

@@ -19,6 +19,7 @@ type Commands interface {
 	Get(key string) (string, error)
 	Set(key, value string) error
 	SetEx(key, value string, expire int) error
+	Incr(key string) (int, error)
 
 	// Hashes - http://redis.io/commands#hash
 
@@ -66,6 +67,7 @@ type NoResultCommands interface {
 	Get(key string) error
 	Set(key, value string) error
 	SetEx(key, value string, expire int) error
+	Incr(key string) error
 
 	// Hashes - http://redis.io/commands#hash
 
