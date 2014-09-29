@@ -197,22 +197,16 @@ func (s *connection) RPush(key string, values ...string) (int, error) {
 
 // Commands - Sets
 
-func (s *connection) SAdd(key string, members ...string) (int, error) {
-	// Returns number of elements added (members that are already present are not counted)
-	return redigo.Int(s.Do("SADD", redigo.Args{key}.AddFlat(members)...))
+func (s *connection) SAdd(key string, member string, members ...string) (int, error) {
+	return redigo.Int(s.Do("SADD", redigo.Args{key}.Add(member).AddFlat(members)...))
 }
 
 func (s *connection) SCard(key string) (int, error) {
-	// Returns number of elements in set
 	return redigo.Int(s.Do("SCARD", key))
 }
 
-func (s *connection) SRem(key, member string) (bool, error) {
-	reply, err := redigo.Int(s.Do("SREM", key, member))
-	if err != nil {
-		return false, err
-	}
-	return reply > 0, nil
+func (s *connection) SRem(key string, member string, members ...string) (int, error) {
+	return redigo.Int(s.Do("SREM", redigo.Args{key}.Add(member).AddFlat(members)...))
 }
 
 func (s *connection) SPop(key string) (string, error) {

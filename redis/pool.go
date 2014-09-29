@@ -317,14 +317,14 @@ func (s *pool) RPush(key string, values ...string) (int, error) {
 
 // Commands - Sets
 
-func (s *pool) SAdd(key string, members ...string) (int, error) {
+func (s *pool) SAdd(key string, member string, members ...string) (int, error) {
 	c, err := s.GetConnection()
 	if err != nil {
 		return 0, err
 	}
 	defer s.Return(c)
 
-	return c.SAdd(key, members...)
+	return c.SAdd(key, member, members...)
 }
 
 func (s *pool) SCard(key string) (int, error) {
@@ -337,14 +337,14 @@ func (s *pool) SCard(key string) (int, error) {
 	return c.SCard(key)
 }
 
-func (s *pool) SRem(key, member string) (bool, error) {
+func (s *pool) SRem(key string, member string, members ...string) (int, error) {
 	c, err := s.GetConnection()
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 	defer s.Return(c)
 
-	return c.SRem(key, member)
+	return c.SRem(key, member, members...)
 }
 
 func (s *pool) SPop(key string) (string, error) {

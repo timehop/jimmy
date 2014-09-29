@@ -39,9 +39,9 @@ type Commands interface {
 
 	// Sets - http://redis.io/commands#generic
 
-	SAdd(key string, members ...string) (int, error)
+	SAdd(key string, member string, members ...string) (int, error)
 	SCard(key string) (int, error)
-	SRem(key, member string) (bool, error)
+	SRem(key, member string, members ...string) (int, error)
 	SPop(key string) (string, error)
 	SMembers(key string) ([]string, error)
 	SRandMember(key string, count int) ([]string, error)
@@ -86,8 +86,8 @@ type NoResultCommands interface {
 
 	// Sets - http://redis.io/commands#generic
 
-	SAdd(key string, members ...string) error
-	SRem(key, member string) error
+	SAdd(key string, member string, members ...string) error
+	SRem(key string, member string, members ...string) error
 	SPop(key string) error
 	SMembers(key string) error
 	SRandMember(key string, count int) error

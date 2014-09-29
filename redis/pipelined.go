@@ -93,12 +93,12 @@ func (s *sendOnlyConnection) RPush(key string, values ...string) error {
 
 // NoResultCommands - Sets
 
-func (s *sendOnlyConnection) SAdd(key string, members ...string) error {
-	return s.count(s.c.Send("SADD", redigo.Args{key}.AddFlat(members)...))
+func (s *sendOnlyConnection) SAdd(key string, member string, members ...string) error {
+	return s.count(s.c.Send("SADD", redigo.Args{key}.Add(member).AddFlat(members)...))
 }
 
-func (s *sendOnlyConnection) SRem(key, member string) error {
-	return s.count(s.c.Send("SREM", key, member))
+func (s *sendOnlyConnection) SRem(key string, member string, members ...string) error {
+	return s.count(s.c.Send("SREM", redigo.Args{key}.Add(member).AddFlat(members)...))
 }
 
 func (s *sendOnlyConnection) SPop(key string) error {
