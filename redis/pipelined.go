@@ -113,6 +113,10 @@ func (s *sendOnlyConnection) SRandMember(key string, count int) error {
 	return s.count(s.c.Send("SRANDMEMBER", key, count))
 }
 
+func (s *sendOnlyConnection) SDiff(key string, keys ...string) error {
+	return s.count(s.c.Send("SDIFF", redigo.Args{key}.AddFlat(keys)...))
+}
+
 // NoResultCommands - Sorted Sets
 
 func (s *sendOnlyConnection) ZAdd(key string, score float64, value string) error {

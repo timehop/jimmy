@@ -377,6 +377,16 @@ func (s *pool) SRandMember(key string, count int) ([]string, error) {
 	return c.SRandMember(key, count)
 }
 
+func (s *pool) SDiff(key string, keys ...string) ([]string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.SDiff(key, keys...)
+}
+
 // Commands - Sorted sets
 
 func (s *pool) ZAdd(key string, score float64, value string) (int, error) {

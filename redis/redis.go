@@ -45,6 +45,7 @@ type Commands interface {
 	SPop(key string) (string, error)
 	SMembers(key string) ([]string, error)
 	SRandMember(key string, count int) ([]string, error)
+	SDiff(key string, keys ...string) ([]string, error)
 
 	// Sorted Sets - http://redis.io/commands#sorted_set
 
@@ -90,6 +91,7 @@ type NoResultCommands interface {
 	SPop(key string) error
 	SMembers(key string) error
 	SRandMember(key string, count int) error
+	SDiff(key string, keys ...string) error
 
 	// Sorted Sets - http://redis.io/commands#sorted_set
 

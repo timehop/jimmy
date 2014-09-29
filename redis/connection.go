@@ -227,6 +227,10 @@ func (s *connection) SRandMember(key string, count int) ([]string, error) {
 	return redigo.Strings(s.Do("SRANDMEMBER", key, count))
 }
 
+func (s *connection) SDiff(key string, keys ...string) ([]string, error) {
+	return redigo.Strings(s.Do("SDIFF", redigo.Args{key}.AddFlat(keys)...))
+}
+
 // Commands - Sorted sets
 
 func (s *connection) ZAdd(key string, score float64, value string) (int, error) {
