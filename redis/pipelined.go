@@ -109,6 +109,10 @@ func (s *sendOnlyConnection) SMembers(key string) error {
 	return s.count(s.c.Send("SMEMBERS", key))
 }
 
+func (s *sendOnlyConnection) SRandMember(key string, count int) error {
+	return s.count(s.c.Send("SRANDMEMBER", key, count))
+}
+
 // NoResultCommands - Sorted Sets
 
 func (s *sendOnlyConnection) ZAdd(key string, score float64, value string) error {

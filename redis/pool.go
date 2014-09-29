@@ -367,6 +367,16 @@ func (s *pool) SMembers(key string) ([]string, error) {
 	return c.SMembers(key)
 }
 
+func (s *pool) SRandMember(key string, count int) ([]string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.SRandMember(key, count)
+}
+
 // Commands - Sorted sets
 
 func (s *pool) ZAdd(key string, score float64, value string) (int, error) {

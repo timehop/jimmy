@@ -44,6 +44,7 @@ type Commands interface {
 	SRem(key, member string) (bool, error)
 	SPop(key string) (string, error)
 	SMembers(key string) ([]string, error)
+	SRandMember(key string, count int) ([]string, error)
 
 	// Sorted Sets - http://redis.io/commands#sorted_set
 
@@ -88,6 +89,7 @@ type NoResultCommands interface {
 	SRem(key, member string) error
 	SPop(key string) error
 	SMembers(key string) error
+	SRandMember(key string, count int) error
 
 	// Sorted Sets - http://redis.io/commands#sorted_set
 
