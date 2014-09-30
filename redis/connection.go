@@ -121,6 +121,10 @@ func (s *connection) Rename(key, newKey string) error {
 	return err
 }
 
+func (s *connection) RenameNX(key, newKey string) (bool, error) {
+	return redigo.Bool(s.Do("RENAMENX", key, newKey))
+}
+
 // Commands - Strings
 
 func (s *connection) Get(key string) (string, error) {

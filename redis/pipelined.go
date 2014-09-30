@@ -41,6 +41,10 @@ func (s *sendOnlyConnection) Rename(key, newKey string) error {
 	return s.count(s.c.Send("RENAME", key, newKey))
 }
 
+func (s *sendOnlyConnection) RenameNX(key, newKey string) error {
+	return s.count(s.c.Send("RENAMENX", key, newKey))
+}
+
 // NoResultCommands - Strings
 
 func (s *sendOnlyConnection) Get(key string) error {

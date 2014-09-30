@@ -169,6 +169,16 @@ func (s *pool) Rename(key, newKey string) error {
 	return c.Rename(key, newKey)
 }
 
+func (s *pool) RenameNX(key, newKey string) (bool, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return false, err
+	}
+	defer s.Return(c)
+
+	return c.RenameNX(key, newKey)
+}
+
 // Commands - Strings
 
 func (s *pool) Get(key string) (string, error) {
