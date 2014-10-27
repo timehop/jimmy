@@ -77,6 +77,10 @@ func (s *sendOnlyConnection) HSet(key string, field string, value string) error 
 	return s.count(s.c.Send("HSET", key, field, value))
 }
 
+func (s *sendOnlyConnection) HDel(key string, field string) error {
+	return s.count(s.c.Send("HDEL", key, field))
+}
+
 // NoResultCommands - Lists
 
 func (s *sendOnlyConnection) LPop(key string) error {

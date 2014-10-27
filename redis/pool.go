@@ -253,6 +253,16 @@ func (s *pool) HSet(key string, field string, value string) (bool, error) {
 	return c.HSet(key, field, value)
 }
 
+func (s *pool) HDel(key string, field string) (bool, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return false, err
+	}
+	defer s.Return(c)
+
+	return c.HDel(key, field)
+}
+
 // Commands - Lists
 
 func (s *pool) BLPop(timeout int, keys ...string) (string, string, error) {

@@ -159,6 +159,10 @@ func (s *connection) HSet(key string, field string, value string) (bool, error) 
 	return redigo.Bool(s.Do("HSET", key, field, value))
 }
 
+func (s *connection) HDel(key string, field string) (bool, error) {
+	return redigo.Bool(s.Do("HDEL", key, field))
+}
+
 // Commands - Lists
 
 func (s *connection) BLPop(timeout int, keys ...string) (string, string, error) {

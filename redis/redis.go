@@ -27,6 +27,7 @@ type Commands interface {
 	HGet(key string, field string) (string, error)
 	HIncrBy(key string, field string, value int64) (newValue int64, err error)
 	HSet(key string, field string, value string) (isNew bool, err error)
+	HDel(key string, field string) (bool, error)
 
 	// Lists - http://redis.io/commands#list
 
@@ -78,6 +79,7 @@ type NoResultCommands interface {
 	HGet(key string, field string) error
 	HIncrBy(key string, field string, value int64) error
 	HSet(key string, field string, value string) error
+	HDel(key string, field string) error
 
 	// Lists - http://redis.io/commands#list
 
