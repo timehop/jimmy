@@ -171,8 +171,7 @@ func (s *connection) BLPop(timeout int, keys ...string) (string, string, error) 
 		return "", "", err
 	}
 
-	fmt.Printf("%v %T, %v %T\n", reply[0], reply[0], reply[1], reply[1])
-	return reply[0].(string), reply[1].(string), nil
+	return string(reply[0].([]byte)), string(reply[1].([]byte)), nil
 }
 
 func (s *connection) BRPop(timeout int, keys ...string) (string, string, error) {
