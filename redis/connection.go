@@ -233,6 +233,10 @@ func (s *connection) SDiff(key string, keys ...string) ([]string, error) {
 	return redigo.Strings(s.Do("SDIFF", redigo.Args{key}.AddFlat(keys)...))
 }
 
+func (s *connection) SIsMember(key string, member string) (bool, error) {
+	return redigo.Bool(s.Do("SISMEMBER", key, member))
+}
+
 // Commands - Sorted sets
 
 func (s *connection) ZAdd(key string, score float64, value string) (int, error) {

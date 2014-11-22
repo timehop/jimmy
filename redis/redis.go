@@ -48,6 +48,7 @@ type Commands interface {
 	SMembers(key string) ([]string, error)
 	SRandMember(key string, count int) ([]string, error)
 	SDiff(key string, keys ...string) ([]string, error)
+	SIsMember(key string, member string) (bool, error)
 
 	// Sorted Sets - http://redis.io/commands#sorted_set
 

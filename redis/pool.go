@@ -407,6 +407,16 @@ func (s *pool) SDiff(key string, keys ...string) ([]string, error) {
 	return c.SDiff(key, keys...)
 }
 
+func (s *pool) SIsMember(key string, member string) (bool, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return false, err
+	}
+	defer s.Return(c)
+
+	return c.SIsMember(key, member)
+}
+
 // Commands - Sorted sets
 
 func (s *pool) ZAdd(key string, score float64, value string) (int, error) {
