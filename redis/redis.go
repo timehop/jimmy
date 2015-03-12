@@ -102,6 +102,7 @@ type NoResultCommands interface {
 	// Sorted Sets - http://redis.io/commands#sorted_set
 
 	ZAdd(key string, score float64, value string) error
+	ZIncBy(key string, score float64, value string) error
 	ZRem(key string, members ...string) error
 }
 

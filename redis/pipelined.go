@@ -131,6 +131,10 @@ func (s *sendOnlyConnection) ZAdd(key string, score float64, value string) error
 	return s.count(s.c.Send("ZADD", key, score, value))
 }
 
+func (s *sendOnlyConnection) ZIncBy(key string, score float64, value string) error {
+	return s.count(s.c.Send("ZINCRBY", key, score, value))
+}
+
 // NoResultCommands - NoResultCommands
 
 func (s *sendOnlyConnection) ZRem(key string, members ...string) error {
