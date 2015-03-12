@@ -468,3 +468,13 @@ func (s *pool) ZRem(key string, members ...string) (int, error) {
 
 	return c.ZRem(key, members...)
 }
+
+func (s *pool) ZIncBy(key string, score float64, value string) (int, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer s.Return(c)
+
+	return c.ZIncBy(key, score, value)
+}
