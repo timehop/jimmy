@@ -266,6 +266,11 @@ func (s *connection) ZRem(key string, members ...string) (int, error) {
 	return redigo.Int(s.Do("ZREM", args...))
 }
 
+func (s *connection) ZIncBy(key string, score float64, value string) (int, error) {
+	// Returns number of score of the value updated
+	return redigo.Int(s.Do("ZINCRBY", key, score, value))
+}
+
 // Transactions
 
 func (s *connection) Multi() error {

@@ -57,6 +57,7 @@ type Commands interface {
 	ZRangeByScore(key, start, stop string, options ...interface{}) ([]string, error)
 	ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error)
 	ZRem(key string, members ...string) (removed int, err error)
+	ZIncBy(key string, score float64, value string) (int, error)
 }
 
 type NoResultCommands interface {
@@ -101,6 +102,7 @@ type NoResultCommands interface {
 	// Sorted Sets - http://redis.io/commands#sorted_set
 
 	ZAdd(key string, score float64, value string) error
+	ZIncBy(key string, score float64, value string) error
 	ZRem(key string, members ...string) error
 }
 
