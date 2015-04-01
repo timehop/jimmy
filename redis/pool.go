@@ -159,6 +159,16 @@ func (s *pool) Exists(key string) (bool, error) {
 	return c.Exists(key)
 }
 
+func (s *pool) Expire(key string, seconds int) (bool, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return false, err
+	}
+	defer s.Return(c)
+
+	return c.Expire(key, seconds)
+}
+
 func (s *pool) Rename(key, newKey string) error {
 	c, err := s.GetConnection()
 	if err != nil {

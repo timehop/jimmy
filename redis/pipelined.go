@@ -37,6 +37,10 @@ func (s *sendOnlyConnection) Exists(key string) error {
 	return s.count(s.c.Send("EXISTS", key))
 }
 
+func (s *sendOnlyConnection) Expire(key string, seconds int) error {
+	return s.count(s.c.Send("EXPIRE", key, seconds))
+}
+
 func (s *sendOnlyConnection) Rename(key, newKey string) error {
 	return s.count(s.c.Send("RENAME", key, newKey))
 }
