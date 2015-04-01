@@ -12,6 +12,7 @@ type Commands interface {
 
 	Del(keys ...string) (int, error)
 	Exists(key string) (bool, error)
+	Expire(key string, seconds int) (bool, error)
 	Rename(key, newKey string) error
 	RenameNX(key, newKey string) (bool, error)
 
@@ -39,7 +40,7 @@ type Commands interface {
 	RPop(key string) (string, error)
 	RPush(key string, values ...string) (int, error)
 
-	// Sets - http://redis.io/commands#generic
+	// Sets - http://redis.io/commands#set
 
 	SAdd(key string, member string, members ...string) (int, error)
 	SCard(key string) (int, error)
@@ -66,6 +67,7 @@ type NoResultCommands interface {
 
 	Del(keys ...string) error
 	Exists(key string) error
+	Expire(key string, seconds int) error
 	Rename(key, newKey string) error
 	RenameNX(key, newKey string) error
 

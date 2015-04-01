@@ -116,6 +116,10 @@ func (s *connection) Exists(key string) (bool, error) {
 	return redigo.Bool(s.Do("EXISTS", key))
 }
 
+func (s *connection) Expire(key string, seconds int) (bool, error) {
+	return redigo.Bool(s.Do("EXPIRE", key, seconds))
+}
+
 func (s *connection) Rename(key, newKey string) error {
 	_, err := s.Do("RENAME", key, newKey)
 	return err
