@@ -145,6 +145,14 @@ func (s *sendOnlyConnection) ZRem(key string, members ...string) error {
 	return s.count(s.c.Send("ZREM", redigo.Args{key}.AddFlat(members)...))
 }
 
+func (s *sendOnlyConnection) PFAdd(key string, values ...string) error {
+	return s.count(s.c.Send("PFADD", redigo.Args{key}.AddFlat(values)...))
+}
+
+func (s *sendOnlyConnection) PFCount(key string) error {
+	return s.count(s.c.Send("PFCOUNT", key))
+}
+
 // Pipeline - only visible to package
 
 func (s *sendOnlyConnection) receiveAll() ([]interface{}, error) {

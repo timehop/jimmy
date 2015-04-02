@@ -284,3 +284,11 @@ func (s *connection) Multi() error {
 func (s *connection) Exec() ([]interface{}, error) {
 	return redigo.Values(s.Do("EXEC"))
 }
+
+func (s *connection) PFAdd(key string, values ...string) (int, error) {
+	return redigo.Int(s.Do("PFADD", redigo.Args{key}.AddFlat(values)...))
+}
+
+func (s *connection) PFCount(key string) (int, error) {
+	return redigo.Int(s.Do("PFCOUNT", key))
+}

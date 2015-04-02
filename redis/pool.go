@@ -488,3 +488,23 @@ func (s *pool) ZIncBy(key string, score float64, value string) (int, error) {
 
 	return c.ZIncBy(key, score, value)
 }
+
+func (s *pool) PFAdd(key string, values ...string) (int, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer s.Return(c)
+
+	return c.PFAdd(key, values...)
+}
+
+func (s *pool) PFCount(key string) (int, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer s.Return(c)
+
+	return c.PFCount(key)
+}

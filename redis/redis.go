@@ -59,6 +59,11 @@ type Commands interface {
 	ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error)
 	ZRem(key string, members ...string) (removed int, err error)
 	ZIncBy(key string, score float64, value string) (int, error)
+
+	// HyperLogLog
+
+	PFAdd(key string, values ...string) (int, error)
+	PFCount(key string) (int, error)
 }
 
 type NoResultCommands interface {
@@ -106,6 +111,11 @@ type NoResultCommands interface {
 	ZAdd(key string, score float64, value string) error
 	ZIncBy(key string, score float64, value string) error
 	ZRem(key string, members ...string) error
+
+	// HyperLogLog
+
+	PFAdd(key string, values ...string) error
+	PFCount(key string) error
 }
 
 type Transactions interface {
