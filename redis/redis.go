@@ -64,6 +64,7 @@ type Commands interface {
 
 	PFAdd(key string, values ...string) (int, error)
 	PFCount(key string) (int, error)
+	PFMerge(mergedKey string, keysToMerge ...string) (bool, error)
 }
 
 type NoResultCommands interface {

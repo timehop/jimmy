@@ -508,3 +508,13 @@ func (s *pool) PFCount(key string) (int, error) {
 
 	return c.PFCount(key)
 }
+
+func (s *pool) PFMerge(mergedKey string, keysToMerge ...string) (bool, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return false, err
+	}
+	defer s.Return(c)
+
+	return c.PFMerge(mergedKey, keysToMerge...)
+}
