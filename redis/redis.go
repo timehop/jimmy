@@ -117,6 +117,7 @@ type NoResultCommands interface {
 
 	PFAdd(key string, values ...string) error
 	PFCount(key string) error
+	PFMerge(mergedKey string, keysToMerge ...string) error
 }
 
 type Transactions interface {
