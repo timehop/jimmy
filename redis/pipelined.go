@@ -153,6 +153,10 @@ func (s *sendOnlyConnection) PFCount(key string) error {
 	return s.count(s.c.Send("PFCOUNT", key))
 }
 
+func (s *sendOnlyConnection) PFMerge(mergedKey string, keysToMerge ...string) error {
+	return s.count(s.c.Send("PFMERGE", redigo.Args{mergedKey}.AddFlat(keysToMerge)...))
+}
+
 // Pipeline - only visible to package
 
 func (s *sendOnlyConnection) receiveAll() ([]interface{}, error) {

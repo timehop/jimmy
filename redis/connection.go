@@ -295,7 +295,7 @@ func (s *connection) PFCount(key string) (int, error) {
 
 func (s *connection) PFMerge(mergedKey string, keysToMerge ...string) (bool, error) {
 	result, err := redigo.String(s.Do("PFMERGE", redigo.Args{mergedKey}.AddFlat(keysToMerge)...))
-	if err != nil || err != ErrNil || result != "OK" {
+	if err != nil || err == ErrNil || result != "OK" {
 		return false, err
 	}
 	return true, nil
