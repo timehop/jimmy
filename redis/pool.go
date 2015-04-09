@@ -325,6 +325,16 @@ func (s *pool) LPush(key string, values ...string) (int, error) {
 	return c.LPush(key, values...)
 }
 
+func (s *pool) LTrim(key string, startIndex int, endIndex int) error {
+	c, err := s.GetConnection()
+	if err != nil {
+		return err
+	}
+	defer s.Return(c)
+
+	return c.LTrim(key, startIndex, endIndex)
+}
+
 func (s *pool) RPop(key string) (string, error) {
 	c, err := s.GetConnection()
 	if err != nil {

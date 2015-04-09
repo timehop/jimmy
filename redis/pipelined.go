@@ -95,6 +95,10 @@ func (s *sendOnlyConnection) LPush(key string, values ...string) error {
 	return s.count(s.c.Send("LPUSH", redigo.Args{key}.AddFlat(values)...))
 }
 
+func (s *sendOnlyConnection) LTrim(key string, startIndex int, endIndex int) error {
+	return s.count(s.c.Send("LTRIM", key, startIndex, endIndex))
+}
+
 func (s *sendOnlyConnection) RPop(key string) error {
 	return s.count(s.c.Send("RPOP", key))
 }
