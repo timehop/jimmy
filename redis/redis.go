@@ -38,6 +38,7 @@ type Commands interface {
 	LPop(key string) (string, error)
 	LPush(key string, values ...string) (int, error)
 	LTrim(key string, startIndex int, endIndex int) error
+	LRange(key string, startIndex int, endIndex int) ([]string, error)
 	RPop(key string) (string, error)
 	RPush(key string, values ...string) (int, error)
 
@@ -97,6 +98,7 @@ type NoResultCommands interface {
 	LPop(key string) error
 	LPush(key string, values ...string) error
 	LTrim(key string, startIndex int, endIndex int) error
+	LRange(key string, startIndex int, endIndex int) error
 	RPop(key string) error
 	RPush(key string, values ...string) error
 

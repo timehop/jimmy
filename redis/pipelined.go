@@ -99,6 +99,10 @@ func (s *sendOnlyConnection) LTrim(key string, startIndex int, endIndex int) err
 	return s.count(s.c.Send("LTRIM", key, startIndex, endIndex))
 }
 
+func (s *sendOnlyConnection) LRange(key string, startIndex int, endIndex int) error {
+	return s.count(s.c.Send("LRANGE", key, startIndex, endIndex))
+}
+
 func (s *sendOnlyConnection) RPop(key string) error {
 	return s.count(s.c.Send("RPOP", key))
 }

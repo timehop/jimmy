@@ -335,6 +335,16 @@ func (s *pool) LTrim(key string, startIndex int, endIndex int) error {
 	return c.LTrim(key, startIndex, endIndex)
 }
 
+func (s *pool) LRange(key string, startIndex int, endIndex int) ([]string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return s.LRange(key, startIndex, endIndex)
+}
+
 func (s *pool) RPop(key string) (string, error) {
 	c, err := s.GetConnection()
 	if err != nil {

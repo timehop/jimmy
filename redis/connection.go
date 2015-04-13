@@ -204,6 +204,10 @@ func (s *connection) LTrim(key string, startIndex int, endIndex int) error {
 	return err
 }
 
+func (s *connection) LRange(key string, startIndex int, endIndex int) ([]string, error) {
+	return redigo.Strings(s.Do("LRANGE", key, startIndex, endIndex))
+}
+
 func (s *connection) RPop(key string) (string, error) {
 	return redigo.String(s.Do("RPOP", key))
 }
