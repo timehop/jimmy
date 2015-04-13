@@ -168,4 +168,43 @@ var _ = Describe("Connection", func() {
 			})
 		})
 	})
+
+	Describe("LRange", func() {
+		Context("When an empty list is ranged", func() {
+			It("Returns nothing, but no err", func() {
+				key := "_tests:jimmy:redis:list"
+				c.Del(key)
+
+				things, err := c.LRange(key, 0, -1)
+				Expect(err).To(BeNil())
+				Expect(things).To(BeEmpty())
+			})
+		})
+
+		Context("When a list is ranged", func() {
+			It("Returns the items", func() {
+				key := "_tests:jimmy:redis:list"
+				c.Del(key)
+
+				for i := 0; i < 5; i++ {
+					_, err := c.LPush(key, fmt.Sprint(i))
+					Expect(err).To(BeNil())
+				}
+
+				things, err := c.LRange(key, 0, -1)
+				Expect(err).To(BeNil())
+				Expect(len(things)).To(Equal(5))
+
+				things, err = c.LRange(key, 0, 0)
+				Expect(err).To(BeNil())
+				Expect(len(things)).To(Equal(1))
+				Expect(things[0]).To(Equal("4"))
+
+				things, err = c.LRange(key, -1, -1)
+				Expect(err).To(BeNil())
+				Expect(len(things)).To(Equal(1))
+				Expect(things[0]).To(Equal("0"))
+			})
+		})
+	})
 })
