@@ -106,7 +106,7 @@ func (s *connection) Receive() (interface{}, error) {
 	return s.c.Receive()
 }
 
-// Commands - Keys
+// KeyCommands
 
 func (s *connection) Del(keys ...string) (int, error) {
 	return redigo.Int(s.Do("DEL", redigo.Args{}.AddFlat(keys)...))
@@ -129,7 +129,7 @@ func (s *connection) RenameNX(key, newKey string) (bool, error) {
 	return redigo.Bool(s.Do("RENAMENX", key, newKey))
 }
 
-// Commands - Strings
+// StringCommands
 
 func (s *connection) Get(key string) (string, error) {
 	return redigo.String(s.Do("GET", key))
@@ -149,7 +149,7 @@ func (s *connection) Incr(key string) (int, error) {
 	return redigo.Int(s.Do("INCR", key))
 }
 
-// Commands - Hashes
+// HashCommands
 
 func (s *connection) HGet(key, field string) (string, error) {
 	return redigo.String(s.Do("HGET", key, field))
@@ -167,7 +167,7 @@ func (s *connection) HDel(key string, field string) (bool, error) {
 	return redigo.Bool(s.Do("HDEL", key, field))
 }
 
-// Commands - Lists
+// ListCommands
 
 func (s *connection) BLPop(timeout int, keys ...string) (string, string, error) {
 	reply, err := redigo.Values(s.Do("BLPOP", redigo.Args{}.AddFlat(keys).Add(timeout)...))
@@ -216,7 +216,7 @@ func (s *connection) RPush(key string, values ...string) (int, error) {
 	return redigo.Int(s.Do("RPUSH", redigo.Args{key}.AddFlat(values)...))
 }
 
-// Commands - Sets
+// SetCommands
 
 func (s *connection) SAdd(key string, member string, members ...string) (int, error) {
 	return redigo.Int(s.Do("SADD", redigo.Args{key}.Add(member).AddFlat(members)...))
@@ -250,7 +250,7 @@ func (s *connection) SIsMember(key string, member string) (bool, error) {
 	return redigo.Bool(s.Do("SISMEMBER", key, member))
 }
 
-// Commands - Sorted sets
+// SortedSetCommands
 
 func (s *connection) ZAdd(key string, score float64, value string) (int, error) {
 	// Returns number of elements added, 0 if already exist
@@ -284,15 +284,7 @@ func (s *connection) ZIncBy(key string, score float64, value string) (int, error
 	return redigo.Int(s.Do("ZINCRBY", key, score, value))
 }
 
-// Transactions
-
-func (s *connection) Multi() error {
-	return s.Send("MULTI")
-}
-
-func (s *connection) Exec() ([]interface{}, error) {
-	return redigo.Values(s.Do("EXEC"))
-}
+// HyperLogLogCommands
 
 func (s *connection) PFAdd(key string, values ...string) (int, error) {
 	return redigo.Int(s.Do("PFADD", redigo.Args{key}.AddFlat(values)...))
@@ -308,4 +300,14 @@ func (s *connection) PFMerge(mergedKey string, keysToMerge ...string) (bool, err
 		return false, err
 	}
 	return true, nil
+}
+
+// Transactions
+
+func (s *connection) Multi() error {
+	return s.Send("MULTI")
+}
+
+func (s *connection) Exec() ([]interface{}, error) {
+	return redigo.Values(s.Do("EXEC"))
 }
