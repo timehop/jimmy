@@ -5,7 +5,7 @@ import (
 )
 
 type Pipeline interface {
-	NoResultCommands
+	BatchCommands
 
 	receiveAll() ([]interface{}, error)
 }
@@ -27,7 +27,7 @@ type sendOnlyConnection struct {
 	counter int
 }
 
-// NoResultCommands - Keys
+// KeyBatchCommands
 
 func (s *sendOnlyConnection) Del(keys ...string) error {
 	return s.count(s.c.Send("DEL", redigo.Args{}.AddFlat(keys)...))
@@ -49,7 +49,7 @@ func (s *sendOnlyConnection) RenameNX(key, newKey string) error {
 	return s.count(s.c.Send("RENAMENX", key, newKey))
 }
 
-// NoResultCommands - Strings
+// StringBatchCommands
 
 func (s *sendOnlyConnection) Get(key string) error {
 	return s.count(s.c.Send("GET", key))
@@ -67,7 +67,7 @@ func (s *sendOnlyConnection) Incr(key string) error {
 	return s.count(s.c.Send("INCR", key))
 }
 
-// Commands - Hashes
+// HashBatchCommands
 
 func (s *sendOnlyConnection) HGet(key, field string) error {
 	return s.count(s.c.Send("HGET", key, field))
@@ -85,7 +85,7 @@ func (s *sendOnlyConnection) HDel(key string, field string) error {
 	return s.count(s.c.Send("HDEL", key, field))
 }
 
-// NoResultCommands - Lists
+// ListBatchCommands
 
 func (s *sendOnlyConnection) LPop(key string) error {
 	return s.count(s.c.Send("LPOP", key))
@@ -111,7 +111,7 @@ func (s *sendOnlyConnection) RPush(key string, values ...string) error {
 	return s.count(s.c.Send("RPUSH", redigo.Args{key}.AddFlat(values)...))
 }
 
-// NoResultCommands - Sets
+// SetBatchCommands
 
 func (s *sendOnlyConnection) SAdd(key string, member string, members ...string) error {
 	return s.count(s.c.Send("SADD", redigo.Args{key}.Add(member).AddFlat(members)...))
@@ -137,7 +137,7 @@ func (s *sendOnlyConnection) SDiff(key string, keys ...string) error {
 	return s.count(s.c.Send("SDIFF", redigo.Args{key}.AddFlat(keys)...))
 }
 
-// NoResultCommands - Sorted Sets
+// SortedSetBatchCommands
 
 func (s *sendOnlyConnection) ZAdd(key string, score float64, value string) error {
 	return s.count(s.c.Send("ZADD", key, score, value))
@@ -147,11 +147,11 @@ func (s *sendOnlyConnection) ZIncBy(key string, score float64, value string) err
 	return s.count(s.c.Send("ZINCRBY", key, score, value))
 }
 
-// NoResultCommands - NoResultCommands
-
 func (s *sendOnlyConnection) ZRem(key string, members ...string) error {
 	return s.count(s.c.Send("ZREM", redigo.Args{key}.AddFlat(members)...))
 }
+
+// HyperLogLogBatchCommands
 
 func (s *sendOnlyConnection) PFAdd(key string, values ...string) error {
 	return s.count(s.c.Send("PFADD", redigo.Args{key}.AddFlat(values)...))
