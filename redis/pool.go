@@ -342,7 +342,7 @@ func (s *pool) LRange(key string, startIndex int, endIndex int) ([]string, error
 	}
 	defer s.Return(c)
 
-	return s.LRange(key, startIndex, endIndex)
+	return c.LRange(key, startIndex, endIndex)
 }
 
 func (s *pool) RPop(key string) (string, error) {
