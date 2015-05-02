@@ -306,6 +306,39 @@ func (s *connection) PFMerge(mergedKey string, keysToMerge ...string) (bool, err
 	return true, nil
 }
 
+func (s *connection) SScan(key string, cursor int, match string, count int) (nextCursor int, matches []string, err error) {
+	var result []interface{}
+	if count < 1 {
+		if len(match) == 0 {
+			result, err = redigo.Values(s.Do("SSCAN", key, cursor))
+		} else {
+			result, err = redigo.Values(s.Do("SSCAN", key, cursor, "MATCH", match))
+		}
+	} else {
+		if len(match) == 0 {
+			result, err = redigo.Values(s.Do("SSCAN", key, cursor, "COUNT", count))
+		} else {
+			result, err = redigo.Values(s.Do("SSCAN", key, cursor, "MATCH", match, "COUNT", count))
+		}
+	}
+	if err != nil {
+		return 0, nil, err
+	}
+	if len(result) > 0 {
+		nextCursor, err = redigo.Int(result[0], nil)
+		if err != nil {
+			return 0, nil, err
+		}
+	}
+	if len(result) > 1 {
+		matches, err = redigo.Strings(result[1], nil)
+		if err != nil {
+			return 0, nil, err
+		}
+	}
+	return nextCursor, matches, nil
+}
+
 // Transactions
 
 func (s *connection) Multi() error {

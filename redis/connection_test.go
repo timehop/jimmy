@@ -227,4 +227,34 @@ var _ = Describe("Connection", func() {
 			Expect(members).To(Equal([]string{"foobar"}))
 		})
 	})
+
+	Describe("SScan", func() {
+		It("Should scan the set", func() {
+			key := "_tests:jimmy:redis:sscan"
+			c.Del(key)
+
+			c.SAdd(key, "a", "b", "c", "d", "e")
+
+			var scanned []string
+			var cursor int
+			var matches []string
+			var err error
+
+			cursor, matches, err = c.SScan(key, cursor, "", 1)
+			Expect(err).To(BeNil())
+			scanned = append(scanned, matches...)
+			for cursor != 0 {
+				cursor, matches, err = c.SScan(key, cursor, "", 1)
+				Expect(err).To(BeNil())
+				scanned = append(scanned, matches...)
+			}
+
+			Expect(len(scanned)).To(Equal(5))
+			Expect(scanned).To(ContainElement("a"))
+			Expect(scanned).To(ContainElement("b"))
+			Expect(scanned).To(ContainElement("c"))
+			Expect(scanned).To(ContainElement("d"))
+			Expect(scanned).To(ContainElement("e"))
+		})
+	})
 })

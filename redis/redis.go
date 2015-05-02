@@ -15,6 +15,7 @@ type Commands interface {
 	SetCommands
 	SortedSetCommands
 	HyperLogLogCommands
+	ScanCommands
 }
 
 // Commands with no results, to be used in transactions/pipelining.
@@ -155,6 +156,10 @@ type HyperLogLogBatchCommands interface {
 	PFAdd(key string, values ...string) error
 	PFCount(key string) error
 	PFMerge(mergedKey string, keysToMerge ...string) error
+}
+
+type ScanCommands interface {
+	SScan(key string, cursor int, match string, count int) (int, []string, error)
 }
 
 type PubSub interface {

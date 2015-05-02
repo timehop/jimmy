@@ -548,3 +548,13 @@ func (s *pool) PFMerge(mergedKey string, keysToMerge ...string) (bool, error) {
 
 	return c.PFMerge(mergedKey, keysToMerge...)
 }
+
+func (s *pool) SScan(key string, cursor int, match string, count int) (nextCursor int, matches []string, err error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, nil, err
+	}
+	defer s.Return(c)
+
+	return c.SScan(key, cursor, match, count)
+}
