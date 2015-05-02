@@ -129,6 +129,10 @@ func (s *sendOnlyConnection) SMembers(key string) error {
 	return s.count(s.c.Send("SMEMBERS", key))
 }
 
+func (s *sendOnlyConnection) SMove(source, destination, member string) error {
+	return s.count(s.c.Send("SMOVE", source, destination, member))
+}
+
 func (s *sendOnlyConnection) SRandMember(key string, count int) error {
 	return s.count(s.c.Send("SRANDMEMBER", key, count))
 }

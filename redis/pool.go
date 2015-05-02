@@ -447,6 +447,16 @@ func (s *pool) SIsMember(key string, member string) (bool, error) {
 	return c.SIsMember(key, member)
 }
 
+func (s *pool) SMove(source, destination, member string) (bool, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return false, err
+	}
+	defer s.Return(c)
+
+	return c.SMove(source, destination, member)
+}
+
 // Commands - Sorted sets
 
 func (s *pool) ZAdd(key string, score float64, value string) (int, error) {

@@ -115,6 +115,7 @@ type SetCommands interface {
 	SRandMember(key string, count int) ([]string, error)
 	SDiff(key string, keys ...string) ([]string, error)
 	SIsMember(key string, member string) (bool, error)
+	SMove(source, destination, member string) (bool, error)
 }
 
 type SetBatchCommands interface {
@@ -124,6 +125,7 @@ type SetBatchCommands interface {
 	SMembers(key string) error
 	SRandMember(key string, count int) error
 	SDiff(key string, keys ...string) error
+	SMove(source, destination, member string) error
 }
 
 // Sorted Sets - http://redis.io/commands#sorted_set

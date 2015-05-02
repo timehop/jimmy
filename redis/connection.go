@@ -250,6 +250,10 @@ func (s *connection) SIsMember(key string, member string) (bool, error) {
 	return redigo.Bool(s.Do("SISMEMBER", key, member))
 }
 
+func (s *connection) SMove(source, destination, member string) (bool, error) {
+	return redigo.Bool(s.Do("SMOVE", source, destination, member))
+}
+
 // SortedSetCommands
 
 func (s *connection) ZAdd(key string, score float64, value string) (int, error) {

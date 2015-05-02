@@ -207,4 +207,24 @@ var _ = Describe("Connection", func() {
 			})
 		})
 	})
+
+	Describe("SMove", func() {
+		It("Should move the member to the other set", func() {
+			key := "_tests:jimmy:redis:smove"
+			c.Del(key + ":a")
+			c.Del(key + ":b")
+
+			c.SAdd(key+":a", "foobar")
+
+			moved, err := c.SMove(key+":a", key+":b", "foobar")
+			Expect(err).To(BeNil())
+			Expect(moved).To(BeTrue())
+
+			members, _ := c.SMembers(key + ":a")
+			Expect(len(members)).To(Equal(0))
+
+			members, _ = c.SMembers(key + ":b")
+			Expect(members).To(Equal([]string{"foobar"}))
+		})
+	})
 })
