@@ -21,28 +21,28 @@ var (
 
 	ErrPoolExhausted = errors.New("connection pool exhausted")
 
-	hostsNotUsingAuth = &unauthedHosts{hosts: map[string]bool{}}
+	hostsNotUsingAuth = &hosts{hosts: map[string]bool{}}
 )
 
 // Thread safe
-type unauthedHosts struct {
+type hosts struct {
 	mu    sync.RWMutex
 	hosts map[string]bool
 }
 
-func (m *unauthedHosts) Add(host string) {
+func (m *hosts) Add(host string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.hosts[host] = true
 }
 
-func (m *unauthedHosts) Remove(host string) {
+func (m *hosts) Remove(host string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	delete(m.hosts, host)
 }
 
-func (m *unauthedHosts) Get(host string) bool {
+func (m *hosts) Get(host string) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.hosts[host]
@@ -62,7 +62,7 @@ func generateConnection(url *netURL.URL) (redigo.Conn, error) {
 
 	// Then we expect the server to potentially ask for a password
 	conn, err := redisurl.ConnectToURL(url.String())
-	if err != nil && err == redigoErrSentAuth {
+	if err == redigoErrSentAuth {
 		hostsNotUsingAuth.Add(url.Host)
 		return generateConnection(url)
 	}

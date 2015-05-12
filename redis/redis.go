@@ -5,7 +5,8 @@ import (
 )
 
 var (
-	ErrNil            = redigo.ErrNil
+	ErrNil = redigo.ErrNil
+
 	redigoErrNoAuth   = redigo.Error("NOAUTH Authentication required.")
 	redigoErrSentAuth = redigo.Error("ERR Client sent AUTH, but no password is set")
 )
