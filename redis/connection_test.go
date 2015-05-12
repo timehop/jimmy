@@ -3,14 +3,76 @@ package redis_test
 import (
 	"fmt"
 
+	netURL "net/url"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/timehop/jimmy/redis"
 )
 
 var _ = Describe("Connection", func() {
-	c, _ := redis.NewConnection("redis://localhost:6379")
+	Describe("NewConnection", func() {
+		// Assumes redis' default state is auth-less
 
+		Context("server has no auth set", func() {
+			It("should ping without auth", func() {
+				url := "redis://localhost:6379"
+				parsedURL, _ := netURL.Parse(url)
+				c, err := redis.NewConnection(parsedURL)
+				Expect(err).To(BeNil())
+
+				_, err = c.Do("PING")
+				Expect(err).To(BeNil())
+			})
+			It("should fallback to ping without auth", func() {
+				url := "redis://user:testpass@localhost:6379"
+				parsedURL, _ := netURL.Parse(url)
+				c, err := redis.NewConnection(parsedURL)
+				Expect(err).To(BeNil())
+
+				_, err = c.Do("PING")
+				Expect(err).To(BeNil())
+			})
+		})
+
+		Context("server requires auth", func() {
+			BeforeEach(func() {
+				url := "redis://localhost:6379"
+				parsedURL, _ := netURL.Parse(url)
+				c, _ := redis.NewConnection(parsedURL)
+				c.Do("CONFIG", "SET", "requirepass", "testpass")
+			})
+			AfterEach(func() {
+				url := "redis://:testpass@localhost:6379"
+				parsedURL, _ := netURL.Parse(url)
+				c, _ := redis.NewConnection(parsedURL)
+				c.Do("CONFIG", "SET", "requirepass", "")
+			})
+
+			It("should fail to ping without auth", func() {
+				url := "redis://localhost:6379"
+				parsedURL, _ := netURL.Parse(url)
+				c, _ := redis.NewConnection(parsedURL)
+
+				_, err := c.Do("PING")
+				Expect(err).ToNot(BeNil())
+			})
+			It("should successfully ping with auth", func() {
+				url := "redis://:testpass@localhost:6379"
+				parsedURL, _ := netURL.Parse(url)
+				c, _ := redis.NewConnection(parsedURL)
+
+				_, err := c.Do("PING")
+				Expect(err).To(BeNil())
+			})
+		})
+	})
+
+	// Using an arbitrary password should fallback to using no password
+
+	url := "redis://:foopass@localhost:6379"
+	parsedURL, _ := netURL.Parse(url)
+	c, _ := redis.NewConnection(parsedURL)
 	Describe("PFAdd", func() {
 		It("Should indicate HyperLogLog register was altered (ie: 1)", func() {
 			// Clean up the key

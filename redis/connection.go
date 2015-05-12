@@ -2,9 +2,9 @@ package redis
 
 import (
 	"fmt"
+	netURL "net/url"
 
 	redigo "github.com/garyburd/redigo/redis"
-	"github.com/soveran/redisurl"
 )
 
 type Connection interface {
@@ -28,20 +28,31 @@ type UnpooledConnection interface {
 	Close()
 }
 
-func NewConnection(url string) (UnpooledConnection, error) {
-	c, err := redisurl.ConnectToURL(url)
+func NewConnection(url *netURL.URL) (UnpooledConnection, error) {
+
+	var password string
+	if url.User != nil {
+		password, _ = url.User.Password()
+	}
+
+	c, err := generateConnection(url)
 	if err != nil {
 		return nil, err
 	}
 
-	conn := &connection{c: c}
+	conn := &connection{
+		password: password,
+		c:        c,
+	}
 
 	return conn, nil
+
 }
 
 type connection struct {
-	c    redigo.Conn
-	pool Pool
+	c        redigo.Conn
+	pool     Pool
+	password string
 }
 
 // PooledConnection
@@ -67,7 +78,15 @@ func (s *connection) Send(command string, args ...interface{}) error {
 }
 
 func (s *connection) Do(command string, args ...interface{}) (interface{}, error) {
-	return s.c.Do(command, args...)
+	val, err := s.c.Do(command, args...)
+	if err == redigoErrNoAuth && s.password != "" {
+		_, err = s.c.Do("AUTH", s.password)
+		if err != nil {
+			return nil, err
+		}
+		val, err = s.c.Do(command, args...)
+	}
+	return val, err
 }
 
 func (s *connection) Transaction(f func(Transaction)) ([]interface{}, error) {

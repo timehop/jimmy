@@ -2,6 +2,8 @@ package redis
 
 import (
 	"errors"
+	netURL "net/url"
+	"sync"
 	"time"
 
 	redigo "github.com/garyburd/redigo/redis"
@@ -18,7 +20,54 @@ var (
 	}
 
 	ErrPoolExhausted = errors.New("connection pool exhausted")
+
+	hostsNotUsingAuth = &unauthedHosts{hosts: map[string]bool{}}
 )
+
+// Thread safe
+type unauthedHosts struct {
+	mu    sync.RWMutex
+	hosts map[string]bool
+}
+
+func (m *unauthedHosts) Add(host string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.hosts[host] = true
+}
+
+func (m *unauthedHosts) Remove(host string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.hosts, host)
+}
+
+func (m *unauthedHosts) Get(host string) bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.hosts[host]
+}
+
+func generateConnection(url *netURL.URL) (redigo.Conn, error) {
+	// Then we expec the server to not ask for a password
+	if hostsNotUsingAuth.Get(url.Host) {
+		url.User = nil
+		conn, err := redisurl.ConnectToURL(url.String())
+		if err == redigoErrNoAuth {
+			hostsNotUsingAuth.Remove(url.Host)
+			return generateConnection(url)
+		}
+		return conn, err
+	}
+
+	// Then we expect the server to potentially ask for a password
+	conn, err := redisurl.ConnectToURL(url.String())
+	if err != nil && err == redigoErrSentAuth {
+		hostsNotUsingAuth.Add(url.Host)
+		return generateConnection(url)
+	}
+	return conn, err
+}
 
 type Config struct {
 	MaxOpenConnections int
@@ -46,20 +95,34 @@ type Pool interface {
 	Shutdown()
 }
 
-func NewPool(url string, config Config) Pool {
-	generator := func() (redigo.Conn, error) {
-		return redisurl.ConnectToURL(url)
+func NewPool(url string, config Config) (Pool, error) {
+	parsedRedisURL, err := netURL.Parse(url)
+	if err != nil {
+		return nil, err
 	}
 
+	return NewPoolWithURL(parsedRedisURL, config), nil
+}
+
+func NewPoolWithURL(url *netURL.URL, config Config) Pool {
+	var password string
+	if url.User != nil {
+		password, _ = url.User.Password()
+	}
+
+	generator := func() (redigo.Conn, error) {
+		return generateConnection(url)
+	}
 	p := redigo.NewPool(generator, config.MaxIdleConnections)
 	p.MaxActive = config.MaxOpenConnections
 	p.IdleTimeout = config.IdleTimeout
 
-	return &pool{p: p}
+	return &pool{p: p, password: password}
 }
 
 type pool struct {
-	p *redigo.Pool
+	p        *redigo.Pool
+	password string
 }
 
 func (s *pool) GetConnection() (PooledConnection, error) {
@@ -76,7 +139,7 @@ func (s *pool) GetConnection() (PooledConnection, error) {
 		}
 	}
 
-	return &connection{pool: s, c: c}, nil
+	return &connection{pool: s, c: c, password: s.password}, nil
 }
 
 func (s *pool) Return(c PooledConnection) {

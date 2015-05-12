@@ -4,7 +4,11 @@ import (
 	redigo "github.com/garyburd/redigo/redis"
 )
 
-var ErrNil = redigo.ErrNil
+var (
+	ErrNil            = redigo.ErrNil
+	redigoErrNoAuth   = redigo.Error("NOAUTH Authentication required.")
+	redigoErrSentAuth = redigo.Error("ERR Client sent AUTH, but no password is set")
+)
 
 // Commands with results
 type Commands interface {
