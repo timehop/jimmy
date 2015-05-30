@@ -93,6 +93,7 @@ type HashBatchCommands interface {
 type ListCommands interface {
 	BLPop(timeout int, keys ...string) (listName string, value string, err error)
 	BRPop(timeout int, keys ...string) (listName string, value string, err error)
+	LIndex(key string, index int) (string, error)
 	LLen(key string) (int, error)
 	LPop(key string) (string, error)
 	LPush(key string, values ...string) (int, error)

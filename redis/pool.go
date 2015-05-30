@@ -358,6 +358,16 @@ func (s *pool) BRPop(timeout int, keys ...string) (string, string, error) {
 	return c.BRPop(timeout, keys...)
 }
 
+func (s *pool) LIndex(key string, index int) (string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return "", err
+	}
+	defer s.Return(c)
+
+	return c.LIndex(key, index)
+}
+
 func (s *pool) LLen(key string) (int, error) {
 	c, err := s.GetConnection()
 	if err != nil {
