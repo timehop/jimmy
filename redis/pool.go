@@ -596,14 +596,14 @@ func (s *pool) ZScore(key string, member string) (score float64, err error) {
 	return c.ZScore(key, member)
 }
 
-func (s *pool) ZIncBy(key string, score float64, value string) (int, error) {
+func (s *pool) ZIncrBy(key string, score float64, value string) (int, error) {
 	c, err := s.GetConnection()
 	if err != nil {
 		return 0, err
 	}
 	defer s.Return(c)
 
-	return c.ZIncBy(key, score, value)
+	return c.ZIncrBy(key, score, value)
 }
 
 func (s *pool) PFAdd(key string, values ...string) (int, error) {
