@@ -206,6 +206,10 @@ func (s *connection) BRPop(timeout int, keys ...string) (string, string, error) 
 	return string(reply[0].([]byte)), string(reply[1].([]byte)), nil
 }
 
+func (s *connection) LIndex(key string, index int) (string, error) {
+	return redigo.String(s.Do("LINDEX", key, index))
+}
+
 func (s *connection) LLen(key string) (int, error) {
 	return redigo.Int(s.Do("LLEN", key))
 }
