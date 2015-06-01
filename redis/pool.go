@@ -582,6 +582,20 @@ func (s *pool) ZRem(key string, members ...string) (int, error) {
 	return c.ZRem(key, members...)
 }
 
+func (s *pool) ZScore(key string, member string) (score float64, err error) {
+	if member == "" {
+		return 0, nil
+	}
+
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer s.Return(c)
+
+	return c.ZScore(key, member)
+}
+
 func (s *pool) ZIncBy(key string, score float64, value string) (int, error) {
 	c, err := s.GetConnection()
 	if err != nil {
