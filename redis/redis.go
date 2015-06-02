@@ -137,7 +137,7 @@ type SetBatchCommands interface {
 
 // Sorted Sets - http://redis.io/commands#sorted_set
 type SortedSetCommands interface {
-	ZAdd(key string, score float64, value string) (int, error)
+	ZAdd(key string, args ...interface{}) (int, error)
 	ZCard(key string) (int, error)
 	ZRangeByScore(key, start, stop string, options ...interface{}) ([]string, error)
 	ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error)
@@ -147,7 +147,7 @@ type SortedSetCommands interface {
 }
 
 type SortedSetBatchCommands interface {
-	ZAdd(key string, score float64, value string) error
+	ZAdd(key string, args ...interface{}) error
 	ZIncrBy(key string, score float64, value string) error
 	ZRem(key string, members ...string) error
 }

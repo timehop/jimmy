@@ -532,14 +532,14 @@ func (s *pool) SMove(source, destination, member string) (bool, error) {
 
 // Commands - Sorted sets
 
-func (s *pool) ZAdd(key string, score float64, value string) (int, error) {
+func (s *pool) ZAdd(key string, args ...interface{}) (int, error) {
 	c, err := s.GetConnection()
 	if err != nil {
 		return 0, err
 	}
 	defer s.Return(c)
 
-	return c.ZAdd(key, score, value)
+	return c.ZAdd(key, args)
 }
 
 func (s *pool) ZCard(key string) (int, error) {

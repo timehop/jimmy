@@ -143,8 +143,8 @@ func (s *sendOnlyConnection) SDiff(key string, keys ...string) error {
 
 // SortedSetBatchCommands
 
-func (s *sendOnlyConnection) ZAdd(key string, score float64, value string) error {
-	return s.count(s.c.Send("ZADD", key, score, value))
+func (s *sendOnlyConnection) ZAdd(key string, args ...interface{}) error {
+	return s.count(s.c.Send("ZADD", redigo.Args{key}.AddFlat(args)...))
 }
 
 func (s *sendOnlyConnection) ZIncrBy(key string, score float64, value string) error {

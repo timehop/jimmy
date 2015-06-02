@@ -279,9 +279,9 @@ func (s *connection) SMove(source, destination, member string) (bool, error) {
 
 // SortedSetCommands
 
-func (s *connection) ZAdd(key string, score float64, value string) (int, error) {
+func (s *connection) ZAdd(key string, args ...interface{}) (int, error) {
 	// Returns number of elements added, 0 if already exist
-	return redigo.Int(s.Do("ZADD", key, score, value))
+	return redigo.Int(s.Do("ZADD", redigo.Args{key}.AddFlat(args)...))
 }
 
 func (s *connection) ZCard(key string) (int, error) {
