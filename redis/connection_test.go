@@ -15,7 +15,10 @@ var _ = Describe("Connection", func() {
 	// Using an arbitrary password should fallback to using no password
 	url := "redis://:foopass@localhost:6379/10"
 	parsedURL, _ := netURL.Parse(url)
-	c, _ := redis.NewConnection(parsedURL)
+	c, err := redis.NewConnection(parsedURL)
+	if err != nil {
+		panic(err)
+	}
 
 	BeforeEach(func() {
 		c.Do("FLUSHDB")
