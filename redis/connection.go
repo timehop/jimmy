@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
 	netURL "net/url"
 
@@ -174,12 +175,39 @@ func (s *connection) HGet(key, field string) (string, error) {
 	return redigo.String(s.Do("HGET", key, field))
 }
 
+func (s *connection) HGetAll(key string) (map[string]string, error) {
+	return stringMap(redigo.Strings(s.Do("HGETALL", key)))
+}
+
 func (s *connection) HIncrBy(key, field string, value int64) (int64, error) {
 	return redigo.Int64(s.Do("HINCRBY", key, field, value))
 }
 
 func (s *connection) HSet(key string, field string, value string) (bool, error) {
 	return redigo.Bool(s.Do("HSET", key, field, value))
+}
+
+func (s *connection) HMGet(key string, fields ...string) (map[string]string, error) {
+	if len(fields) == 0 {
+		return nil, errors.New("redis: at least once field is required")
+	}
+	vals, err := redigo.Strings(s.Do("HMGET", redigo.Args{key}.AddFlat(fields)...))
+	return spliceMap(fields, vals, err)
+}
+
+func (s *connection) HMSet(key string, args map[string]interface{}) error {
+	if len(args) == 0 {
+		return errors.New("redis: at least one key/value pair is required")
+	}
+
+	result, err := redigo.String(s.Do("HMSET", redigo.Args{key}.AddFlat(mapToSlice(args))...))
+	if err != nil || err == ErrNil {
+		return err
+	}
+	if result != "OK" {
+		return fmt.Errorf("result is %v rather than OK", result)
+	}
+	return nil
 }
 
 func (s *connection) HDel(key string, field string) (bool, error) {
@@ -331,8 +359,11 @@ func (s *connection) PFCount(key string) (int, error) {
 
 func (s *connection) PFMerge(mergedKey string, keysToMerge ...string) (bool, error) {
 	result, err := redigo.String(s.Do("PFMERGE", redigo.Args{mergedKey}.AddFlat(keysToMerge)...))
-	if err != nil || err == ErrNil || result != "OK" {
+	if err != nil || err == ErrNil {
 		return false, err
+	}
+	if result != "OK" {
+		return false, fmt.Errorf("result is %v rather than OK", result)
 	}
 	return true, nil
 }

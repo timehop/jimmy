@@ -77,15 +77,32 @@ type StringBatchCommands interface {
 // Hashes - http://redis.io/commands#hash
 type HashCommands interface {
 	HGet(key string, field string) (string, error)
+
+	// HGetAll returns a map containing all the fields and values in the specified key.
+	// As specified by the Redis docs, because non-existing keys are treated as empty hashes,
+	// calling this on a non-existant key will return an empty map and a nil error.
+	HGetAll(key string) (map[string]string, error)
+
 	HIncrBy(key string, field string, value int64) (newValue int64, err error)
 	HSet(key string, field string, value string) (isNew bool, err error)
+
+	// HMGet returns a map of the specified fields to their values in the specified key. As is
+	// consistent with redigo.Strings, nil values (missing fields) are converted to empty strings.
+	// As specified by the Redis docs, because non-existing keys are treated as empty hashes,
+	// calling this on a non-existant key will return a map of the specified keys to empty strings.
+	HMGet(key string, fields ...string) (map[string]string, error)
+
+	HMSet(key string, args map[string]interface{}) error
 	HDel(key string, field string) (bool, error)
 }
 
 type HashBatchCommands interface {
 	HGet(key string, field string) error
+	HGetAll(key string) error
 	HIncrBy(key string, field string, value int64) error
 	HSet(key string, field string, value string) error
+	HMGet(key string, fields ...string) error
+	HMSet(key string, args map[string]interface{}) error
 	HDel(key string, field string) error
 }
 
