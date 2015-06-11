@@ -11,6 +11,19 @@ import (
 )
 
 var _ = Describe("Connection", func() {
+
+	// Using an arbitrary password should fallback to using no password
+	url := "redis://:foopass@localhost:6379/10"
+	parsedURL, _ := netURL.Parse(url)
+	c, err := redis.NewConnection(parsedURL)
+	if err != nil {
+		panic(err)
+	}
+
+	BeforeEach(func() {
+		c.Do("FLUSHDB")
+	})
+
 	Describe("NewConnection", func() {
 		// Assumes redis' default state is auth-less
 
@@ -68,24 +81,13 @@ var _ = Describe("Connection", func() {
 		})
 	})
 
-	// Using an arbitrary password should fallback to using no password
-
-	url := "redis://:foopass@localhost:6379"
-	parsedURL, _ := netURL.Parse(url)
-	c, _ := redis.NewConnection(parsedURL)
 	Describe("PFAdd", func() {
 		It("Should indicate HyperLogLog register was altered (ie: 1)", func() {
-			// Clean up the key
-			c.Del("_tests:jimmy:redis:foo1")
-
-			// Subject
 			i, err := c.PFAdd("_tests:jimmy:redis:foo1", "bar")
 			Expect(err).To(BeNil())
 			Expect(i).To(Equal(1))
 		})
 		It("Should indicate HyperLogLog register was not altered (ie: 0)", func() {
-
-			// Subject
 			_, err := c.PFAdd("_tests:jimmy:redis:foo2", "bar")
 			Expect(err).To(BeNil())
 			i, err := c.PFAdd("_tests:jimmy:redis:foo2", "bar")
@@ -96,7 +98,6 @@ var _ = Describe("Connection", func() {
 
 	Describe("PFCount", func() {
 		It("Should return the approximate cardinality of the HLL", func() {
-			c.Del("_tests:jimmy:redis:foo3")
 			var actualCardinality float64 = 20000
 			for i := 0; float64(i) < actualCardinality; i++ {
 				_, err := c.PFAdd("_tests:jimmy:redis:foo3", fmt.Sprint(i))
@@ -112,10 +113,6 @@ var _ = Describe("Connection", func() {
 
 	Describe("PFMerge", func() {
 		It("Should return the approximate cardinality of the union of multiple HLLs", func() {
-			c.Del("_tests:jimmy:redis:hll1")
-			c.Del("_tests:jimmy:redis:hll2")
-			c.Del("_tests:jimmy:redis:hll3")
-
 			setA := []int{1, 2, 3, 4, 5}
 			setB := []int{3, 4, 5, 6, 7}
 			setC := []int{8, 9, 10, 11, 12}
@@ -172,7 +169,6 @@ var _ = Describe("Connection", func() {
 			It("Trims the list", func() {
 				key := "_tests:jimmy:redis:list"
 
-				c.Del(key)
 				for i := 0; i < 5; i++ {
 					c.LPush(key, fmt.Sprint(i))
 				}
@@ -219,7 +215,6 @@ var _ = Describe("Connection", func() {
 			It("Returns an error", func() {
 				key := "_tests:jimmy:redis:not-list"
 
-				c.Del(key)
 				Expect(c.Set(key, "yay")).To(BeNil())
 				Expect(c.LTrim(key, 0, 4)).ToNot(BeNil())
 
@@ -235,8 +230,6 @@ var _ = Describe("Connection", func() {
 		Context("When an empty list is ranged", func() {
 			It("Returns nothing, but no err", func() {
 				key := "_tests:jimmy:redis:list"
-				c.Del(key)
-
 				things, err := c.LRange(key, 0, -1)
 				Expect(err).To(BeNil())
 				Expect(things).To(BeEmpty())
@@ -246,8 +239,6 @@ var _ = Describe("Connection", func() {
 		Context("When a list is ranged", func() {
 			It("Returns the items", func() {
 				key := "_tests:jimmy:redis:list"
-				c.Del(key)
-
 				for i := 0; i < 5; i++ {
 					_, err := c.LPush(key, fmt.Sprint(i))
 					Expect(err).To(BeNil())
@@ -273,8 +264,6 @@ var _ = Describe("Connection", func() {
 	Describe("SMove", func() {
 		It("Should move the member to the other set", func() {
 			key := "_tests:jimmy:redis:smove"
-			c.Del(key + ":a")
-			c.Del(key + ":b")
 
 			c.SAdd(key+":a", "foobar")
 
@@ -293,7 +282,6 @@ var _ = Describe("Connection", func() {
 	Describe("SScan", func() {
 		It("Should scan the set", func() {
 			key := "_tests:jimmy:redis:sscan"
-			c.Del(key)
 
 			c.SAdd(key, "a", "b", "c", "d", "e")
 
@@ -319,4 +307,305 @@ var _ = Describe("Connection", func() {
 			Expect(scanned).To(ContainElement("e"))
 		})
 	})
+
+	Describe("HGet", func() {
+		Context("a key that exists and contains a hash that contains the requested field with a value", func() {
+			It("returns the value of that field of that key", func() {
+				mustSucceed2(c.HSet("foo", "bar", "baz"))
+				val, err := c.HGet("foo", "bar")
+				Expect(err).To(BeNil())
+				Expect(val).To(Equal("baz"))
+			})
+		})
+
+		Context("a key that exists and contains a hash that doesn’t contain the requested field", func() {
+			It("returns an error and an empty string", func() {
+				mustSucceed2(c.HSet("foo", "blah", "blech"))
+				val, err := c.HGet("foo", "bar")
+				Expect(err).ToNot(BeNil())
+				Expect(val).To(Equal(""))
+			})
+		})
+
+		Context("a key that doesn’t exist", func() {
+			It("returns an error and an empty string", func() {
+				val, err := c.HGet("foo", "bar")
+				Expect(err).ToNot(BeNil())
+				Expect(val).To(Equal(""))
+			})
+		})
+
+		Context("a key that exists but doesn’t contain a hash", func() {
+			It("returns an error and an empty string", func() {
+				mustSucceed1(c.Set("foo", "yo"))
+				val, err := c.HGet("foo", "bar")
+				Expect(err).ToNot(BeNil())
+				Expect(val).To(Equal(""))
+			})
+		})
+	})
+
+	Describe("HGetAll", func() {
+		Context("a key that exists and contains 2 key/value pairs", func() {
+			It("returns the 2 pairs and no error", func() {
+				in := map[string]interface{}{
+					"bar":  "baz",
+					"blah": "blech",
+				}
+				err := c.HMSet("foo", in)
+				Expect(err).To(BeNil())
+
+				vals, err := c.HGetAll("foo")
+				Expect(err).To(BeNil())
+				Expect(vals).To(HaveLen(2))
+				Expect(vals).To(HaveKeyWithValue("bar", "baz"))
+				Expect(vals).To(HaveKeyWithValue("blah", "blech"))
+			})
+		})
+
+		Context("a key that doesn’t exist", func() {
+			It("returns an empty map and no error", func() {
+				vals, err := c.HGetAll("foo")
+				Expect(err).To(BeNil())
+				Expect(vals).To(HaveLen(0))
+			})
+		})
+	})
+
+	Describe("HSet", func() {
+		Context("a key that doesn’t already exist and two strings", func() {
+			It("returns true and nil and contain the new pair", func() {
+				isNew, err := c.HSet("foo", "bar", "baz")
+				Expect(err).To(BeNil())
+				Expect(isNew).To(Equal(true))
+
+				val, err := c.HGet("foo", "bar")
+				Expect(err).To(BeNil())
+				Expect(val).To(Equal("baz"))
+			})
+		})
+
+		Context("a key that already exists and a field that it doesn’t already contain", func() {
+			It("returns true and nil and contain both fields", func() {
+				mustSucceed2(c.HSet("foo", "bar", "baz"))
+				isNew, err := c.HSet("foo", "yo", "oy")
+				Expect(err).To(BeNil())
+				Expect(isNew).To(Equal(true))
+
+				val, err := c.HGet("foo", "bar")
+				Expect(err).To(BeNil())
+				Expect(val).To(Equal("baz"))
+
+				val, err = c.HGet("foo", "yo")
+				Expect(err).To(BeNil())
+				Expect(val).To(Equal("oy"))
+			})
+		})
+
+		Context("a key that already exists and a field that it already contains", func() {
+			It("returns false and nil and change the value of the field", func() {
+				mustSucceed2(c.HSet("foo", "bar", "baz"))
+				isNew, err := c.HSet("foo", "bar", "yo")
+				Expect(err).To(BeNil())
+				Expect(isNew).To(Equal(false))
+
+				val, err := c.HGet("foo", "bar")
+				Expect(err).To(BeNil())
+				Expect(val).To(Equal("yo"))
+			})
+		})
+
+		Context("a key that already exists and is not a hash", func() {
+			It("returns false and an error", func() {
+				mustSucceed1(c.Set("foo", "bar"))
+				isNew, err := c.HSet("foo", "bar", "yo")
+				Expect(err).ToNot(BeNil())
+				Expect(isNew).To(Equal(false))
+
+				val, err := c.HGet("foo", "bar")
+				Expect(err).ToNot(BeNil())
+				Expect(val).To(Equal(""))
+
+				val, err = c.Get("foo")
+				Expect(err).To(BeNil())
+				Expect(val).To(Equal("bar"))
+			})
+		})
+	})
+
+	Describe("HMGet", func() {
+		Context("a key that exists and contains the 2 specified keys", func() {
+			It("returns the 2 pairs and no error", func() {
+				in := map[string]interface{}{
+					"bar":  "baz",
+					"blah": "blech",
+				}
+				err := c.HMSet("foo", in)
+				Expect(err).To(BeNil())
+
+				vals, err := c.HMGet("foo", "bar", "blah")
+				Expect(err).To(BeNil())
+				Expect(vals).To(HaveLen(2))
+				Expect(vals).To(HaveKeyWithValue("bar", "baz"))
+				Expect(vals).To(HaveKeyWithValue("blah", "blech"))
+			})
+		})
+
+		Context("a key that exists and contains the 2 of the 3 specified keys", func() {
+			It("returns the 2 pairs and no error", func() {
+				in := map[string]interface{}{
+					"bar":  "baz",
+					"blah": "blech",
+				}
+				err := c.HMSet("foo", in)
+				Expect(err).To(BeNil())
+
+				vals, err := c.HMGet("foo", "bar", "yo", "blah")
+				Expect(err).To(BeNil())
+				Expect(vals).To(HaveLen(3))
+				Expect(vals).To(HaveKeyWithValue("bar", "baz"))
+				Expect(vals).To(HaveKeyWithValue("yo", ""))
+				Expect(vals).To(HaveKeyWithValue("blah", "blech"))
+			})
+		})
+
+		Context("a key that doesn’t exist", func() {
+			It("returns nil values and no error", func() {
+				vals, err := c.HMGet("foo", "bar", "blah")
+				Expect(err).To(BeNil())
+				Expect(vals).To(HaveLen(2))
+				Expect(vals).To(HaveKeyWithValue("bar", ""))
+				Expect(vals).To(HaveKeyWithValue("blah", ""))
+			})
+		})
+
+		Context("no fields", func() {
+			It("returns nil values and an error", func() {
+				vals, err := c.HMGet("foo")
+				Expect(err).ToNot(BeNil())
+				Expect(vals).To(HaveLen(0))
+			})
+		})
+	})
+
+	Describe("HMSet", func() {
+		Context("a key that doesn’t already exist and a map with 2 string pairs", func() {
+			It("returns nil and creates the hash containing the new pairs", func() {
+				in := map[string]interface{}{
+					"bar":  "baz",
+					"blah": "blech",
+				}
+				err := c.HMSet("foo", in)
+				Expect(err).To(BeNil())
+
+				vals, err := c.HGetAll("foo")
+				Expect(err).To(BeNil())
+				Expect(vals).To(HaveLen(2))
+				Expect(vals).To(HaveKeyWithValue("bar", "baz"))
+				Expect(vals).To(HaveKeyWithValue("blah", "blech"))
+			})
+		})
+
+		Context("a key that doesn’t already exist and a map with 2 int pairs", func() {
+			It("returns nil and creates the hash containing the new pairs", func() {
+				in := map[string]interface{}{
+					"bar":  18,
+					"blah": 42,
+				}
+				err := c.HMSet("foo", in)
+				Expect(err).To(BeNil())
+
+				vals, err := c.HGetAll("foo")
+				Expect(err).To(BeNil())
+				Expect(vals).To(HaveLen(2))
+				Expect(vals).To(HaveKeyWithValue("bar", "18"))
+				Expect(vals).To(HaveKeyWithValue("blah", "42"))
+			})
+		})
+
+		Context("a key that already exists with 3 pairs and a map with 2 pairs that it already contains", func() {
+			It("returns nil and changes the hash to contain the fields with their new values, but leaves other fields alone", func() {
+				in := map[string]interface{}{
+					"bar":  18,
+					"blah": 42,
+					"yo":   "oy",
+				}
+				err := c.HMSet("foo", in)
+				Expect(err).To(BeNil())
+
+				in = map[string]interface{}{
+					"bar":  "baz",
+					"blah": "blech",
+				}
+				err = c.HMSet("foo", in)
+				Expect(err).To(BeNil())
+
+				vals, err := c.HGetAll("foo")
+				Expect(err).To(BeNil())
+				Expect(vals).To(HaveLen(3))
+				Expect(vals).To(HaveKeyWithValue("bar", "baz"))
+				Expect(vals).To(HaveKeyWithValue("blah", "blech"))
+				Expect(vals).To(HaveKeyWithValue("yo", "oy"))
+			})
+		})
+
+		Context("a key that already exists and is not a hash", func() {
+			It("returns false and an error", func() {
+				mustSucceed1(c.Set("foo", "bar"))
+
+				in := map[string]interface{}{
+					"bar":  "baz",
+					"blah": "blech",
+				}
+				err := c.HMSet("foo", in)
+				Expect(err).ToNot(BeNil())
+
+				val, err := c.HGet("foo", "bar")
+				Expect(err).ToNot(BeNil())
+				Expect(val).To(Equal(""))
+
+				val, err = c.Get("foo")
+				Expect(err).To(BeNil())
+				Expect(val).To(Equal("bar"))
+			})
+		})
+
+		Context("a key that already exists and an empty map", func() {
+			It("returns an error and doesn’t change existing the key", func() {
+				mustSucceed2(c.HSet("foo", "bar", "baz"))
+				in := map[string]interface{}{}
+				err := c.HMSet("foo", in)
+				Expect(err).ToNot(BeNil())
+
+				vals, err := c.HGetAll("foo")
+				Expect(err).To(BeNil())
+				Expect(vals).To(HaveLen(1))
+				Expect(vals).To(HaveKeyWithValue("bar", "baz"))
+			})
+		})
+
+		Context("a key that doesn’t already exist and an empty map", func() {
+			It("returns an error and doesn’t create the key", func() {
+				in := map[string]interface{}{}
+				err := c.HMSet("foo", in)
+				Expect(err).ToNot(BeNil())
+
+				exists, err := c.Exists("foo")
+				Expect(err).To(BeNil())
+				Expect(exists).To(BeFalse())
+			})
+		})
+	})
 })
+
+func mustSucceed1(err error) {
+	if err != nil {
+		Fail("Expected " + err.Error() + " to be nil")
+	}
+}
+
+func mustSucceed2(_ interface{}, err error) {
+	if err != nil {
+		Fail("Expected " + err.Error() + " to be nil")
+	}
+}

@@ -306,6 +306,16 @@ func (s *pool) HGet(key, field string) (string, error) {
 	return c.HGet(key, field)
 }
 
+func (s *pool) HGetAll(key string) (map[string]string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.HGetAll(key)
+}
+
 func (s *pool) HIncrBy(key, field string, value int64) (int64, error) {
 	c, err := s.GetConnection()
 	if err != nil {
@@ -324,6 +334,26 @@ func (s *pool) HSet(key string, field string, value string) (bool, error) {
 	defer s.Return(c)
 
 	return c.HSet(key, field, value)
+}
+
+func (s *pool) HMGet(key string, fields ...string) (map[string]string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.HMGet(key, fields...)
+}
+
+func (s *pool) HMSet(key string, args map[string]interface{}) error {
+	c, err := s.GetConnection()
+	if err != nil {
+		return err
+	}
+	defer s.Return(c)
+
+	return c.HMSet(key, args)
 }
 
 func (s *pool) HDel(key string, field string) (bool, error) {

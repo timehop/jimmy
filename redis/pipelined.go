@@ -1,6 +1,8 @@
 package redis
 
 import (
+	"errors"
+
 	redigo "github.com/garyburd/redigo/redis"
 )
 
@@ -73,12 +75,27 @@ func (s *sendOnlyConnection) HGet(key, field string) error {
 	return s.count(s.c.Send("HGET", key, field))
 }
 
+func (s *sendOnlyConnection) HGetAll(key string) error {
+	return s.count(s.c.Send("HGETALL", key))
+}
+
 func (s *sendOnlyConnection) HIncrBy(key, field string, value int64) error {
 	return s.count(s.c.Send("HINCRBY", key, field, value))
 }
 
 func (s *sendOnlyConnection) HSet(key string, field string, value string) error {
 	return s.count(s.c.Send("HSET", key, field, value))
+}
+
+func (s *sendOnlyConnection) HMGet(key string, fields ...string) error {
+	if len(fields) == 0 {
+		return errors.New("redis: at least once field is required")
+	}
+	return s.count(s.c.Send("HMGET", redigo.Args{key}.AddFlat(fields)...))
+}
+
+func (s *sendOnlyConnection) HMSet(key string, args map[string]interface{}) error {
+	return s.count(s.c.Send("HMSET", redigo.Args{key}.AddFlat(mapToSlice(args))...))
 }
 
 func (s *sendOnlyConnection) HDel(key string, field string) error {
