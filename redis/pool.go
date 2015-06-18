@@ -569,7 +569,7 @@ func (s *pool) ZAdd(key string, args ...interface{}) (int, error) {
 	}
 	defer s.Return(c)
 
-	return c.ZAdd(key, args)
+	return c.ZAdd(key, args...)
 }
 
 func (s *pool) ZCard(key string) (int, error) {
