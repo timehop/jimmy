@@ -589,4 +589,14 @@ var _ = Describe("Pool", func() {
 			})
 		})
 	})
+
+	Describe("ZAdd", func() {
+		Context("happy path", func() {
+			It("succeeds", func() {
+				added, err := p.ZAdd("foo", 0.123, "bar")
+				Expect(err).To(BeNil())
+				Expect(added).To(Equal(1))
+			})
+		})
+	})
 })
