@@ -325,6 +325,10 @@ func (s *connection) ZRangeByScoreWithLimit(key, start, stop string, offset, cou
 	return redigo.Strings(s.Do("ZRANGEBYSCORE", key, start, stop, "LIMIT", fmt.Sprint(offset), fmt.Sprint(count)))
 }
 
+func (s *connection) ZRank(key, member string) (int, error) {
+	return redigo.Int(s.Do("ZRANK", key, member))
+}
+
 func (s *connection) ZRem(key string, members ...string) (int, error) {
 	if len(members) == 0 {
 		return 0, nil
@@ -332,6 +336,10 @@ func (s *connection) ZRem(key string, members ...string) (int, error) {
 
 	args := redigo.Args{}.Add(key).AddFlat(members)
 	return redigo.Int(s.Do("ZREM", args...))
+}
+
+func (s *connection) ZRemRangeByRank(key string, start, stop int) (int, error) {
+	return redigo.Int(s.Do("ZREMRANGEBYRANK", key, start, stop))
 }
 
 func (s *connection) ZScore(key string, member string) (score float64, err error) {

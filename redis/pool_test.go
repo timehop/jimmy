@@ -599,4 +599,38 @@ var _ = Describe("Pool", func() {
 			})
 		})
 	})
+
+	Describe("ZRank", func() {
+		Context("a key that exists", func() {
+			It("returns a rank", func() {
+				p.ZAdd("foo", 0.123, "bar")
+				p.ZAdd("foo", 0.127, "barfu")
+				rank, err := p.ZRank("foo", "bar")
+				Expect(err).To(BeNil())
+				Expect(rank).To(Equal(0))
+				rank, err = p.ZRank("foo", "barfu")
+				Expect(err).To(BeNil())
+				Expect(rank).To(Equal(1))
+			})
+		})
+	})
+
+	Describe("ZRemRangeByRank", func() {
+		Context("the rank of a member", func() {
+			It("removes members with lower or equal rank", func() {
+				p.ZAdd("foo", 0.123, "bar")
+				p.ZAdd("foo", 0.127, "barfu")
+				p.ZAdd("foo", 0.132, "barfoo")
+				rank, err := p.ZRank("foo", "barfu")
+				Expect(err).To(BeNil())
+				Expect(rank).To(Equal(1))
+				total, err := p.ZRemRangeByRank("foo", 0, 1)
+				Expect(err).To(BeNil())
+				Expect(total).To(Equal(2))
+				rank, err = p.ZRank("foo", "barfoo")
+				Expect(err).To(BeNil())
+				Expect(rank).To(Equal(0))
+			})
+		})
+	})
 })
