@@ -602,6 +602,16 @@ func (s *pool) ZRangeByScoreWithLimit(key, start, stop string, offset, count int
 	return c.ZRangeByScoreWithLimit(key, start, stop, offset, count)
 }
 
+func (s *pool) ZRank(key, member string) (int, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer s.Return(c)
+
+	return c.ZRank(key, member)
+}
+
 func (s *pool) ZRem(key string, members ...string) (int, error) {
 	c, err := s.GetConnection()
 	if err != nil {
@@ -610,6 +620,16 @@ func (s *pool) ZRem(key string, members ...string) (int, error) {
 	defer s.Return(c)
 
 	return c.ZRem(key, members...)
+}
+
+func (s *pool) ZRemRangeByRank(key string, start, stop int) (int, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer s.Return(c)
+
+	return c.ZRemRangeByRank(key, start, stop)
 }
 
 func (s *pool) ZScore(key string, member string) (score float64, err error) {

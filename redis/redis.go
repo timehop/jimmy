@@ -158,7 +158,9 @@ type SortedSetCommands interface {
 	ZCard(key string) (int, error)
 	ZRangeByScore(key, start, stop string, options ...interface{}) ([]string, error)
 	ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error)
+	ZRank(key, member string) (int, error)
 	ZRem(key string, members ...string) (removed int, err error)
+	ZRemRangeByRank(key string, start, stop int) (int, error)
 	ZScore(key string, member string) (score float64, err error)
 	ZIncrBy(key string, score float64, value string) (int, error)
 }
@@ -166,7 +168,9 @@ type SortedSetCommands interface {
 type SortedSetBatchCommands interface {
 	ZAdd(key string, args ...interface{}) error
 	ZIncrBy(key string, score float64, value string) error
+	ZRank(key, member string) error
 	ZRem(key string, members ...string) error
+	ZRemRangeByRank(key string, start, stop int) error
 }
 
 // HyperLogLog

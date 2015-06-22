@@ -168,8 +168,16 @@ func (s *sendOnlyConnection) ZIncrBy(key string, score float64, value string) er
 	return s.count(s.c.Send("ZINCRBY", key, score, value))
 }
 
+func (s *sendOnlyConnection) ZRank(key string, member string) error {
+	return s.count(s.c.Send("ZRANK", key, member))
+}
+
 func (s *sendOnlyConnection) ZRem(key string, members ...string) error {
 	return s.count(s.c.Send("ZREM", redigo.Args{key}.AddFlat(members)...))
+}
+
+func (s *sendOnlyConnection) ZRemRangeByRank(key string, start, stop int) error {
+	return s.count(s.c.Send("ZREMRANGEBYRANK", key, start, stop))
 }
 
 // HyperLogLogBatchCommands
