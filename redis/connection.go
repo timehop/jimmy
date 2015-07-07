@@ -320,6 +320,10 @@ func (s *connection) ZRangeByScore(key, start, stop string, options ...interface
 	return redigo.Strings(s.Do("ZRANGEBYSCORE", redigo.Args{key, start, stop}.AddFlat(options)...))
 }
 
+func (s *connection) ZRevRangeByScore(key, start, stop string, options ...interface{}) ([]string, error) {
+	return redigo.Strings(s.Do("ZREVRANGEBYSCORE", redigo.Args{key, start, stop}.AddFlat(options)...))
+}
+
 // KC: Deprecated. Please use ZRangeByScore(key, start, stop, "LIMIT", 0, 1)
 func (s *connection) ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error) {
 	return redigo.Strings(s.Do("ZRANGEBYSCORE", key, start, stop, "LIMIT", fmt.Sprint(offset), fmt.Sprint(count)))

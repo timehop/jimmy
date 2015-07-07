@@ -592,6 +592,16 @@ func (s *pool) ZRangeByScore(key, start, stop string, options ...interface{}) ([
 	return c.ZRangeByScore(key, start, stop, options...)
 }
 
+func (s *pool) ZRevRangeByScore(key, start, stop string, options ...interface{}) ([]string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.ZRevRangeByScore(key, start, stop, options...)
+}
+
 func (s *pool) ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error) {
 	c, err := s.GetConnection()
 	if err != nil {

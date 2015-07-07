@@ -157,6 +157,7 @@ type SortedSetCommands interface {
 	ZAdd(key string, args ...interface{}) (int, error)
 	ZCard(key string) (int, error)
 	ZRangeByScore(key, start, stop string, options ...interface{}) ([]string, error)
+	ZRevRangeByScore(key, start, stop string, options ...interface{}) ([]string, error)
 	ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error)
 	ZRank(key, member string) (int, error)
 	ZRem(key string, members ...string) (removed int, err error)
