@@ -15,8 +15,9 @@ const Unlimited = 0
 var (
 	DefaultConfig = Config{
 		MaxOpenConnections: Unlimited,
-		MaxIdleConnections: 10,
-		IdleTimeout:        0,
+		MaxIdleConnections: 50,
+		IdleTimeout:        1 * time.Minute,
+		Wait:               true,
 	}
 
 	ErrPoolExhausted = errors.New("connection pool exhausted")
@@ -73,6 +74,7 @@ type Config struct {
 	MaxOpenConnections int
 	MaxIdleConnections int
 	IdleTimeout        time.Duration
+	Wait               bool
 }
 
 type PooledConnection interface {
@@ -116,6 +118,7 @@ func NewPoolWithURL(url *netURL.URL, config Config) Pool {
 	p := redigo.NewPool(generator, config.MaxIdleConnections)
 	p.MaxActive = config.MaxOpenConnections
 	p.IdleTimeout = config.IdleTimeout
+	p.Wait = config.Wait
 
 	return &pool{p: p, password: password}
 }
