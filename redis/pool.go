@@ -708,3 +708,13 @@ func (s *pool) SScan(key string, cursor int, match string, count int) (nextCurso
 
 	return c.SScan(key, cursor, match, count)
 }
+
+func (s *pool) ZScan(key string, cursor int, match string, count int) (nextCursor int, matches []string, scores []float64, err error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, nil, nil, err
+	}
+	defer s.Return(c)
+
+	return c.ZScan(key, cursor, match, count)
+}

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	netURL "net/url"
+	"strconv"
 
 	redigo "github.com/garyburd/redigo/redis"
 )
@@ -411,6 +412,48 @@ func (s *connection) SScan(key string, cursor int, match string, count int) (nex
 		}
 	}
 	return nextCursor, matches, nil
+}
+
+func (s *connection) ZScan(key string, cursor int, match string, count int) (nextCursor int, matches []string, scores []float64, err error) {
+	var result []interface{}
+	if count < 1 {
+		if len(match) == 0 {
+			result, err = redigo.Values(s.Do("ZSCAN", key, cursor))
+		} else {
+			result, err = redigo.Values(s.Do("ZSCAN", key, cursor, "MATCH", match))
+		}
+	} else {
+		if len(match) == 0 {
+			result, err = redigo.Values(s.Do("ZSCAN", key, cursor, "COUNT", count))
+		} else {
+			result, err = redigo.Values(s.Do("ZSCAN", key, cursor, "MATCH", match, "COUNT", count))
+		}
+	}
+	if err != nil {
+		return 0, nil, nil, err
+	}
+	if len(result) > 0 {
+		nextCursor, err = redigo.Int(result[0], nil)
+		if err != nil {
+			return 0, nil, nil, err
+		}
+	}
+	if len(result) > 1 {
+		matchesWithScores, err := redigo.Strings(result[1], nil)
+		if err != nil {
+			return 0, nil, nil, err
+		}
+		matches = make([]string, len(matchesWithScores)/2)
+		scores = make([]float64, len(matchesWithScores)/2)
+		for i := 0; i < len(matchesWithScores)/2; i++ {
+			matches[i] = matchesWithScores[i*2]
+			scores[i], err = strconv.ParseFloat(matchesWithScores[i*2+1], 64)
+			if err != nil {
+				return 0, nil, nil, err
+			}
+		}
+	}
+	return nextCursor, matches, scores, nil
 }
 
 // Transactions

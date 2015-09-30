@@ -279,6 +279,58 @@ var _ = Describe("Connection", func() {
 		})
 	})
 
+	Describe("ZScan", func() {
+		It("Should scan the sorted set", func() {
+			key := "_tests:jimmy:redis:zscan"
+
+			c.ZAdd(key, 1, "a")
+			c.ZAdd(key, 2, "b")
+			c.ZAdd(key, 3, "c")
+			c.ZAdd(key, 4, "d")
+			c.ZAdd(key, 5, "e")
+
+			var scanned []string
+			var scannedScores []float64
+			var cursor int
+			var matches []string
+			var scores []float64
+			var err error
+
+			cursor, matches, scores, err = c.ZScan(key, cursor, "", 1)
+			Expect(err).To(BeNil())
+			scanned = append(scanned, matches...)
+			scannedScores = append(scannedScores, scores...)
+			for cursor != 0 {
+				cursor, matches, scores, err = c.ZScan(key, cursor, "", 1)
+				Expect(err).To(BeNil())
+				scannedScores = append(scannedScores, scores...)
+			}
+
+			Expect(len(scanned)).To(Equal(5))
+			Expect(scanned).To(ContainElement("a"))
+			Expect(scanned).To(ContainElement("b"))
+			Expect(scanned).To(ContainElement("c"))
+			Expect(scanned).To(ContainElement("d"))
+			Expect(scanned).To(ContainElement("e"))
+
+			for i, elem := range scanned {
+				switch elem {
+				case "a":
+					Expect(scannedScores[i]).To(Equal(float64(1)))
+				case "b":
+					Expect(scannedScores[i]).To(Equal(float64(2)))
+				case "c":
+					Expect(scannedScores[i]).To(Equal(float64(3)))
+				case "d":
+					Expect(scannedScores[i]).To(Equal(float64(4)))
+				case "e":
+					Expect(scannedScores[i]).To(Equal(float64(5)))
+				}
+			}
+
+		})
+	})
+
 	Describe("SScan", func() {
 		It("Should scan the set", func() {
 			key := "_tests:jimmy:redis:sscan"

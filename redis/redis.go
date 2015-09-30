@@ -188,7 +188,8 @@ type HyperLogLogBatchCommands interface {
 }
 
 type ScanCommands interface {
-	SScan(key string, cursor int, match string, count int) (int, []string, error)
+	SScan(key string, cursor int, match string, count int) (nextCursor int, matches []string, err error)
+	ZScan(key string, cursor int, match string, count int) (nextCursor int, matches []string, scores []float64, err error)
 }
 
 type PubSub interface {
