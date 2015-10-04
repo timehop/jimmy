@@ -81,6 +81,34 @@ var _ = Describe("Connection", func() {
 		})
 	})
 
+	Describe("TTL", func() {
+		Context("Without a key.", func() {
+			It("Should return -2.", func() {
+				i, err := c.TTL("foo")
+				Expect(err).To(BeNil())
+				Expect(i).To(Equal(-2))
+			})
+		})
+		Context("With a key without an expiration.", func() {
+			It("Should return -1.", func() {
+				c.Set("foo", "bar")
+
+				i, err := c.TTL("foo")
+				Expect(err).To(BeNil())
+				Expect(i).To(Equal(-1))
+			})
+		})
+		Context("With a key with an expiration.", func() {
+			It("Should return the time to live.", func() {
+				c.SetEx("biz", "baz", 15)
+
+				i, err := c.TTL("biz")
+				Expect(err).To(BeNil())
+				Expect(i).To(Equal(15))
+			})
+		})
+	})
+
 	Describe("PFAdd", func() {
 		It("Should indicate HyperLogLog register was altered (ie: 1)", func() {
 			i, err := c.PFAdd("_tests:jimmy:redis:foo1", "bar")

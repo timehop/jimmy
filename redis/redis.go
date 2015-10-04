@@ -49,6 +49,7 @@ type KeyCommands interface {
 	Expire(key string, seconds int) (bool, error)
 	Rename(key, newKey string) error
 	RenameNX(key, newKey string) (bool, error)
+	TTL(key string) (int, error)
 }
 
 type KeyBatchCommands interface {
@@ -57,6 +58,7 @@ type KeyBatchCommands interface {
 	Expire(key string, seconds int) error
 	Rename(key, newKey string) error
 	RenameNX(key, newKey string) error
+	TTL(key string) error
 }
 
 // Strings - http://redis.io/commands#string

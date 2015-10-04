@@ -141,6 +141,10 @@ func (s *connection) Expire(key string, seconds int) (bool, error) {
 	return redigo.Bool(s.Do("EXPIRE", key, seconds))
 }
 
+func (s *connection) TTL(key string) (int, error) {
+	return redigo.Int(s.Do("TTL", key))
+}
+
 func (s *connection) Rename(key, newKey string) error {
 	_, err := s.Do("RENAME", key, newKey)
 	return err

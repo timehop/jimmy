@@ -47,6 +47,10 @@ func (s *sendOnlyConnection) Rename(key, newKey string) error {
 	return s.count(s.c.Send("RENAME", key, newKey))
 }
 
+func (s *sendOnlyConnection) TTL(key string) error {
+	return s.count(s.c.Send("TTL", key))
+}
+
 func (s *sendOnlyConnection) RenameNX(key, newKey string) error {
 	return s.count(s.c.Send("RENAMENX", key, newKey))
 }

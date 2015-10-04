@@ -235,6 +235,16 @@ func (s *pool) Expire(key string, seconds int) (bool, error) {
 	return c.Expire(key, seconds)
 }
 
+func (s *pool) TTL(key string) (int, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer s.Return(c)
+
+	return c.TTL(key)
+}
+
 func (s *pool) Rename(key, newKey string) error {
 	c, err := s.GetConnection()
 	if err != nil {
