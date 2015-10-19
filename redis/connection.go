@@ -170,6 +170,10 @@ func (s *connection) SetEx(key, value string, expire int) error {
 	return err
 }
 
+func (s *connection) SetNX(key, value string) (bool, error) {
+	return redigo.Bool(s.Do("SETNX", key, value))
+}
+
 func (s *connection) Incr(key string) (int, error) {
 	return redigo.Int(s.Do("INCR", key))
 }

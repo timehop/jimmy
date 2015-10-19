@@ -69,6 +69,10 @@ func (s *sendOnlyConnection) SetEx(key, value string, expire int) error {
 	return s.count(s.c.Send("SETEX", key, expire, value))
 }
 
+func (s *sendOnlyConnection) SetNX(key, value string) error {
+	return s.count(s.c.Send("SETNX", key, value))
+}
+
 func (s *sendOnlyConnection) Incr(key string) error {
 	return s.count(s.c.Send("INCR", key))
 }

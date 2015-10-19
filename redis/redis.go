@@ -66,6 +66,7 @@ type StringCommands interface {
 	Get(key string) (string, error)
 	Set(key, value string) error
 	SetEx(key, value string, expire int) error
+	SetNX(key, value string) (bool, error)
 	Incr(key string) (int, error)
 }
 
@@ -73,6 +74,7 @@ type StringBatchCommands interface {
 	Get(key string) error
 	Set(key, value string) error
 	SetEx(key, value string, expire int) error
+	SetNX(key, value string) error
 	Incr(key string) error
 }
 

@@ -307,6 +307,30 @@ var _ = Describe("Connection", func() {
 		})
 	})
 
+	Describe("SETNX", func() {
+		It("Should not set an existing key.", func() {
+			key := "_tests:jimmy:redis:setnx.existing"
+			c.Set(key, "foo")
+
+			ok, err := c.SetNX(key, "bar")
+			Expect(err).To(BeNil())
+			Expect(ok).To(Equal(false))
+
+			foo, _ := c.Get(key)
+			Expect(foo).To(Equal("foo"))
+		})
+		It("Should set a non-existent key.", func() {
+			key := "_tests:jimmy:redis:setnx.notexisting"
+
+			ok, err := c.SetNX(key, "bar")
+			Expect(err).To(BeNil())
+			Expect(ok).To(Equal(true))
+
+			foo, _ := c.Get(key)
+			Expect(foo).To(Equal("bar"))
+		})
+	})
+
 	Describe("ZScan", func() {
 		It("Should scan the sorted set", func() {
 			key := "_tests:jimmy:redis:zscan"

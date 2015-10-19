@@ -297,6 +297,16 @@ func (s *pool) SetEx(key, value string, expire int) error {
 	return c.SetEx(key, value, expire)
 }
 
+func (s *pool) SetNX(key, value string) (bool, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return false, err
+	}
+	defer s.Return(c)
+
+	return c.SetNX(key, value)
+}
+
 func (s *pool) Incr(key string) (int, error) {
 	c, err := s.GetConnection()
 	if err != nil {
