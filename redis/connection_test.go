@@ -13,7 +13,7 @@ import (
 var _ = Describe("Connection", func() {
 
 	// Using an arbitrary password should fallback to using no password
-	url := "redis://:foopass@localhost:6379/10"
+	url := "redis://:foopass@localhost:6379/12"
 	parsedURL, _ := netURL.Parse(url)
 	c, err := redis.NewConnection(parsedURL)
 	if err != nil {
@@ -76,6 +76,24 @@ var _ = Describe("Connection", func() {
 				c, _ := redis.NewConnection(parsedURL)
 
 				_, err := c.Do("PING")
+				Expect(err).To(BeNil())
+			})
+		})
+	})
+
+	Describe("DEL", func() {
+		Context("Where no key exists", func() {
+			It("Should return 0 with no error.", func() {
+				i, err := c.Del("doesnotexist")
+				Expect(i).To(Equal(0))
+				Expect(err).To(BeNil())
+			})
+		})
+		Context("Where a key exists", func() {
+			It("Should return 1 with no error.", func() {
+				c.Set("exists", "The best leaders know when to follow.")
+				i, err := c.Del("exists")
+				Expect(i).To(Equal(1))
 				Expect(err).To(BeNil())
 			})
 		})
