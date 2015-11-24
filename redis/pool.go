@@ -471,6 +471,16 @@ func (s *pool) LRange(key string, startIndex int, endIndex int) ([]string, error
 	return c.LRange(key, startIndex, endIndex)
 }
 
+func (s *pool) LRem(key string, value string) (int, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer s.Return(c)
+
+	return c.LRem(key, value)
+}
+
 func (s *pool) RPop(key string) (string, error) {
 	c, err := s.GetConnection()
 	if err != nil {

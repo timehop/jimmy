@@ -276,6 +276,10 @@ func (s *connection) RPush(key string, values ...string) (int, error) {
 	return redigo.Int(s.Do("RPUSH", redigo.Args{key}.AddFlat(values)...))
 }
 
+func (s *connection) LRem(key string, value string) (int, error) {
+	return redigo.Int(s.Do("LREM", 1, value))
+}
+
 // SetCommands
 
 func (s *connection) SAdd(key string, member string, members ...string) (int, error) {
