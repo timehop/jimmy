@@ -277,7 +277,7 @@ func (s *connection) RPush(key string, values ...string) (int, error) {
 }
 
 func (s *connection) LRem(key string, count int, value string) (int, error) {
-	return redigo.Int(s.Do("LREM", count, value))
+	return redigo.Int(s.Do("LREM", key, count, value))
 }
 
 // SetCommands
