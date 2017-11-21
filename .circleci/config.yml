@@ -1,0 +1,25 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/timehop/jimmy 
+    environment:
+      DOCKER_USER: timehopinfra
+    docker:
+      # Primary container image where all steps run.
+      - image: timehop/circleci-2.0
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+      - image: redis:2.8
+    steps:
+      - checkout
+      - run: 
+          name: Running tests
+          environment:
+            REDIS_URL: redis://localhost:6379
+          command: ginkgo -r --randomizeAllSpecs --skipMeasurements --cover --trace --race
+workflows:
+  version: 2
+  build_test_deploy:
+    jobs:
+      - build
