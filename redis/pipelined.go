@@ -169,23 +169,89 @@ func (s *sendOnlyConnection) SDiff(key string, keys ...string) error {
 // SortedSetBatchCommands
 
 func (s *sendOnlyConnection) ZAdd(key string, args ...interface{}) error {
+	if len(args) == 0 {
+		return nil
+	}
 	return s.count(s.c.Send("ZADD", redigo.Args{key}.AddFlat(args)...))
 }
 
-func (s *sendOnlyConnection) ZIncrBy(key string, score float64, value string) error {
-	return s.count(s.c.Send("ZINCRBY", key, score, value))
+func (s *sendOnlyConnection) ZCard(key string) error {
+	return s.count(s.c.Send("ZCARD", key))
 }
 
-func (s *sendOnlyConnection) ZRank(key string, member string) error {
+func (s *sendOnlyConnection) ZRange(key string, start, stop int) error {
+	return s.count(s.c.Send("ZRANGE", key, start, stop))
+}
+
+func (s *sendOnlyConnection) ZRangeWithScores(key string, start, stop int) error {
+	return s.count(s.c.Send("ZRANGE", key, start, stop, "WITHSCORES"))
+}
+
+func (s *sendOnlyConnection) ZRangeByScore(key, min, max string) error {
+	return s.count(s.c.Send("ZRANGEBYSCORE", key, min, max))
+}
+
+func (s *sendOnlyConnection) ZRangeByScoreWithScores(key, min, max string) error {
+	return s.count(s.c.Send("ZRANGEBYSCORE", key, min, max, "WITHSCORES"))
+}
+
+func (s *sendOnlyConnection) ZRangeByScoreWithLimit(key, min, max string, offset, count int) error {
+	return s.count(s.c.Send("ZRANGEBYSCORE", key, min, max, "LIMIT", offset, count))
+}
+
+func (s *sendOnlyConnection) ZRangeByScoreWithScoresWithLimit(key, min, max string, offset, count int) error {
+	return s.count(s.c.Send("ZRANGEBYSCORE", key, min, max, "WITHSCORES", "LIMIT", offset, count))
+}
+
+func (s *sendOnlyConnection) ZRevRange(key string, start, stop int) error {
+	return s.count(s.c.Send("ZREVRANGE", key, start, stop))
+}
+
+func (s *sendOnlyConnection) ZRevRangeWithScores(key string, start, stop int) error {
+	return s.count(s.c.Send("ZREVRANGE", key, start, stop, "WITHSCORES"))
+}
+
+func (s *sendOnlyConnection) ZRevRangeByScore(key, min, max string) error {
+	return s.count(s.c.Send("ZREVRANGEBYSCORE", key, min, max))
+}
+
+func (s *sendOnlyConnection) ZRevRangeByScoreWithScores(key, min, max string) error {
+	return s.count(s.c.Send("ZREVRANGEBYSCORE", key, min, max, "WITHSCORES"))
+}
+
+func (s *sendOnlyConnection) ZRevRangeByScoreWithLimit(key, min, max string, offset, count int) error {
+	return s.count(s.c.Send("ZREVRANGEBYSCORE", key, min, max, "LIMIT", offset, count))
+}
+
+func (s *sendOnlyConnection) ZRevRangeByScoreWithScoresWithLimit(key, min, max string, offset, count int) error {
+	return s.count(s.c.Send("ZREVRANGEBYSCORE", key, min, max, "WITHSCORES", "LIMIT", offset, count))
+}
+
+func (s *sendOnlyConnection) ZRank(key, member string) error {
 	return s.count(s.c.Send("ZRANK", key, member))
 }
 
 func (s *sendOnlyConnection) ZRem(key string, members ...string) error {
-	return s.count(s.c.Send("ZREM", redigo.Args{key}.AddFlat(members)...))
+	if len(members) == 0 {
+		return nil
+	}
+	args := redigo.Args{}.Add(key).AddFlat(members)
+	return s.count(s.c.Send("ZREM", args...))
 }
 
 func (s *sendOnlyConnection) ZRemRangeByRank(key string, start, stop int) error {
 	return s.count(s.c.Send("ZREMRANGEBYRANK", key, start, stop))
+}
+
+func (s *sendOnlyConnection) ZScore(key string, member string) (err error) {
+	if member == "" {
+		return nil
+	}
+	return s.count(s.c.Send("ZSCORE", key, member))
+}
+
+func (s *sendOnlyConnection) ZIncrBy(key string, score float64, value string) error {
+	return s.count(s.c.Send("ZINCRBY", key, score, value))
 }
 
 // HyperLogLogBatchCommands

@@ -187,10 +187,24 @@ type SortedSetCommands interface {
 
 type SortedSetBatchCommands interface {
 	ZAdd(key string, args ...interface{}) error
-	ZIncrBy(key string, score float64, value string) error
+	ZCard(key string) error
+	ZRange(key string, start, stop int) error
+	ZRangeWithScores(key string, start, stop int) error
+	ZRangeByScore(key, min, max string) error
+	ZRangeByScoreWithScores(key, min, max string) error
+	ZRangeByScoreWithLimit(key, min, max string, offset, count int) error
+	ZRangeByScoreWithScoresWithLimit(key, min, max string, offset, count int) error
+	ZRevRange(key string, start, stop int) error
+	ZRevRangeWithScores(key string, start, stop int) error
+	ZRevRangeByScore(key, min, max string) error
+	ZRevRangeByScoreWithScores(key, min, max string) error
+	ZRevRangeByScoreWithLimit(key, min, max string, offset, count int) error
+	ZRevRangeByScoreWithScoresWithLimit(key, min, max string, offset, count int) error
 	ZRank(key, member string) error
 	ZRem(key string, members ...string) error
 	ZRemRangeByRank(key string, start, stop int) error
+	ZScore(key string, member string) error
+	ZIncrBy(key string, score float64, value string) error
 }
 
 // HyperLogLog
