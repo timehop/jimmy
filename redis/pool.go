@@ -615,24 +615,44 @@ func (s *pool) ZCard(key string) (int, error) {
 	return c.ZCard(key)
 }
 
-func (s *pool) ZRangeByScore(key, start, stop string, options ...interface{}) ([]string, error) {
+func (s *pool) ZRange(key string, start, stop int) ([]string, error) {
 	c, err := s.GetConnection()
 	if err != nil {
 		return nil, err
 	}
 	defer s.Return(c)
 
-	return c.ZRangeByScore(key, start, stop, options...)
+	return c.ZRange(key, start, stop)
 }
 
-func (s *pool) ZRevRangeByScore(key, start, stop string, options ...interface{}) ([]string, error) {
+func (s *pool) ZRangeWithScores(key string, start, stop int) ([]Z, error) {
 	c, err := s.GetConnection()
 	if err != nil {
 		return nil, err
 	}
 	defer s.Return(c)
 
-	return c.ZRevRangeByScore(key, start, stop, options...)
+	return c.ZRangeWithScores(key, start, stop)
+}
+
+func (s *pool) ZRangeByScore(key, start, stop string) ([]string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.ZRangeByScore(key, start, stop)
+}
+
+func (s *pool) ZRangeByScoreWithScores(key, start, stop string) ([]Z, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.ZRangeByScoreWithScores(key, start, stop)
 }
 
 func (s *pool) ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error) {
@@ -643,6 +663,76 @@ func (s *pool) ZRangeByScoreWithLimit(key, start, stop string, offset, count int
 	defer s.Return(c)
 
 	return c.ZRangeByScoreWithLimit(key, start, stop, offset, count)
+}
+
+func (s *pool) ZRangeByScoreWithScoresWithLimit(key, start, stop string, offset, count int) ([]Z, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.ZRangeByScoreWithScoresWithLimit(key, start, stop, offset, count)
+}
+
+func (s *pool) ZRevRange(key string, start, stop int) ([]string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.ZRevRange(key, start, stop)
+}
+
+func (s *pool) ZRevRangeWithScores(key string, start, stop int) ([]Z, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.ZRevRangeWithScores(key, start, stop)
+}
+
+func (s *pool) ZRevRangeByScore(key, start, stop string) ([]string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.ZRevRangeByScore(key, start, stop)
+}
+
+func (s *pool) ZRevRangeByScoreWithScores(key, start, stop string) ([]Z, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.ZRevRangeByScoreWithScores(key, start, stop)
+}
+
+func (s *pool) ZRevRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.ZRevRangeByScoreWithLimit(key, start, stop, offset, count)
+}
+
+func (s *pool) ZRevRangeByScoreWithScoresWithLimit(key, start, stop string, offset, count int) ([]Z, error) {
+	c, err := s.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer s.Return(c)
+
+	return c.ZRevRangeByScoreWithScoresWithLimit(key, start, stop, offset, count)
 }
 
 func (s *pool) ZRank(key, member string) (int, error) {

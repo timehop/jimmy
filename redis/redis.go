@@ -11,6 +11,11 @@ var (
 	redigoErrSentAuth = redigo.Error("ERR Client sent AUTH, but no password is set")
 )
 
+type Z struct {
+	Value string
+	Score float64
+}
+
 // Commands with results
 type Commands interface {
 	KeyCommands
@@ -161,9 +166,18 @@ type SetBatchCommands interface {
 type SortedSetCommands interface {
 	ZAdd(key string, args ...interface{}) (int, error)
 	ZCard(key string) (int, error)
-	ZRangeByScore(key, start, stop string, options ...interface{}) ([]string, error)
-	ZRevRangeByScore(key, start, stop string, options ...interface{}) ([]string, error)
-	ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error)
+	ZRange(key string, start, stop int) ([]string, error)
+	ZRangeWithScores(key string, start, stop int) ([]Z, error)
+	ZRangeByScore(key, min, max string) ([]string, error)
+	ZRangeByScoreWithScores(key, min, max string) ([]Z, error)
+	ZRangeByScoreWithLimit(key, min, max string, offset, count int) ([]string, error)
+	ZRangeByScoreWithScoresWithLimit(key, min, max string, offset, count int) ([]Z, error)
+	ZRevRange(key string, start, stop int) ([]string, error)
+	ZRevRangeWithScores(key string, start, stop int) ([]Z, error)
+	ZRevRangeByScore(key, min, max string) ([]string, error)
+	ZRevRangeByScoreWithScores(key, min, max string) ([]Z, error)
+	ZRevRangeByScoreWithLimit(key, min, max string, offset, count int) ([]string, error)
+	ZRevRangeByScoreWithScoresWithLimit(key, min, max string, offset, count int) ([]Z, error)
 	ZRank(key, member string) (int, error)
 	ZRem(key string, members ...string) (removed int, err error)
 	ZRemRangeByRank(key string, start, stop int) (int, error)

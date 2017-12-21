@@ -329,17 +329,81 @@ func (s *connection) ZCard(key string) (int, error) {
 	return redigo.Int(s.Do("ZCARD", key))
 }
 
-func (s *connection) ZRangeByScore(key, start, stop string, options ...interface{}) ([]string, error) {
-	return redigo.Strings(s.Do("ZRANGEBYSCORE", redigo.Args{key, start, stop}.AddFlat(options)...))
+func zValuesWithScores(reply interface{}, err error) ([]Z, error) {
+	values, err := redigo.Values(reply, err)
+	if err != nil {
+		return nil, err
+	}
+
+	if (len(values)/2)*2 != len(values) {
+		return nil, errors.New("jimmy: sorted set values withscores are odd-numbered")
+	}
+
+	zslice := make([]Z, len(values)/2)
+	for i := 0; i+1 < len(values); i = i + 2 {
+		value, ok := values[i].([]byte)
+		if !ok {
+			return nil, fmt.Errorf("jimmy: expected []byte value but was %T", values[i])
+		}
+		score, ok := values[i+1].([]byte)
+		if !ok {
+			return nil, fmt.Errorf("jimmy: expected []byte score but was %T", values[i+1])
+		}
+		fscore, err := strconv.ParseFloat(string(score), 64)
+		if err != nil {
+			return nil, err
+		}
+		zslice[i/2] = Z{Value: string(value), Score: float64(fscore)}
+	}
+	return zslice, nil
 }
 
-func (s *connection) ZRevRangeByScore(key, start, stop string, options ...interface{}) ([]string, error) {
-	return redigo.Strings(s.Do("ZREVRANGEBYSCORE", redigo.Args{key, start, stop}.AddFlat(options)...))
+func (s *connection) ZRange(key string, start, stop int) ([]string, error) {
+	return redigo.Strings(s.Do("ZRANGE", key, start, stop))
 }
 
-// KC: Deprecated. Please use ZRangeByScore(key, start, stop, "LIMIT", 0, 1)
-func (s *connection) ZRangeByScoreWithLimit(key, start, stop string, offset, count int) ([]string, error) {
-	return redigo.Strings(s.Do("ZRANGEBYSCORE", key, start, stop, "LIMIT", fmt.Sprint(offset), fmt.Sprint(count)))
+func (s *connection) ZRangeWithScores(key string, start, stop int) ([]Z, error) {
+	return zValuesWithScores(s.Do("ZRANGE", key, start, stop, "WITHSCORES"))
+}
+
+func (s *connection) ZRangeByScore(key, min, max string) ([]string, error) {
+	return redigo.Strings(s.Do("ZRANGEBYSCORE", key, min, max))
+}
+
+func (s *connection) ZRangeByScoreWithScores(key, min, max string) ([]Z, error) {
+	return zValuesWithScores(s.Do("ZRANGEBYSCORE", key, min, max, "WITHSCORES"))
+}
+
+func (s *connection) ZRangeByScoreWithLimit(key, min, max string, offset, count int) ([]string, error) {
+	return redigo.Strings(s.Do("ZRANGEBYSCORE", key, min, max, "LIMIT", offset, count))
+}
+
+func (s *connection) ZRangeByScoreWithScoresWithLimit(key, min, max string, offset, count int) ([]Z, error) {
+	return zValuesWithScores(s.Do("ZRANGEBYSCORE", key, min, max, "WITHSCORES", "LIMIT", offset, count))
+}
+
+func (s *connection) ZRevRange(key string, start, stop int) ([]string, error) {
+	return redigo.Strings(s.Do("ZREVRANGE", key, start, stop))
+}
+
+func (s *connection) ZRevRangeWithScores(key string, start, stop int) ([]Z, error) {
+	return zValuesWithScores(s.Do("ZREVRANGE", key, start, stop, "WITHSCORES"))
+}
+
+func (s *connection) ZRevRangeByScore(key, min, max string) ([]string, error) {
+	return redigo.Strings(s.Do("ZREVRANGEBYSCORE", key, min, max))
+}
+
+func (s *connection) ZRevRangeByScoreWithScores(key, min, max string) ([]Z, error) {
+	return zValuesWithScores(s.Do("ZREVRANGEBYSCORE", key, min, max, "WITHSCORES"))
+}
+
+func (s *connection) ZRevRangeByScoreWithLimit(key, min, max string, offset, count int) ([]string, error) {
+	return redigo.Strings(s.Do("ZREVRANGEBYSCORE", key, min, max, "LIMIT", offset, count))
+}
+
+func (s *connection) ZRevRangeByScoreWithScoresWithLimit(key, min, max string, offset, count int) ([]Z, error) {
+	return zValuesWithScores(s.Do("ZREVRANGEBYSCORE", key, min, max, "WITHSCORES", "LIMIT", offset, count))
 }
 
 func (s *connection) ZRank(key, member string) (int, error) {

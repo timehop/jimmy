@@ -633,4 +633,91 @@ var _ = Describe("Pool", func() {
 			})
 		})
 	})
+
+	Describe("ZRange", func() {
+		It("returns all elements by range", func() {
+			p.ZAdd("foo", 0.123, "bar")
+			p.ZAdd("foo", 0.127, "barfu")
+			p.ZAdd("foo", 0.132, "barfoo")
+			p.ZAdd("foo", 0.133, "barfubar")
+			values, err := p.ZRange("foo", 1, 2)
+			Expect(err).To(BeNil())
+			Expect(values).To(HaveLen(2))
+			Expect(values[0]).To(Equal("barfu"))
+			Expect(values[1]).To(Equal("barfoo"))
+		})
+	})
+
+	Describe("ZRangeWithScores", func() {
+		It("returns all elements by range", func() {
+			p.ZAdd("foo", 0.123, "bar")
+			p.ZAdd("foo", 0.127, "barfu")
+			p.ZAdd("foo", 0.132, "barfoo")
+			p.ZAdd("foo", 0.133, "barfubar")
+			values, err := p.ZRangeWithScores("foo", 1, 2)
+			Expect(err).To(BeNil())
+			Expect(values).To(HaveLen(2))
+			Expect(values[0].Value).To(Equal("barfu"))
+			Expect(values[0].Score).To(Equal(0.127))
+			Expect(values[1].Value).To(Equal("barfoo"))
+			Expect(values[1].Score).To(Equal(0.132))
+		})
+	})
+
+	Describe("ZRangeByScore", func() {
+		It("returns all elements by range", func() {
+			p.ZAdd("foo", 0.123, "bar")
+			p.ZAdd("foo", 0.127, "barfu")
+			p.ZAdd("foo", 0.132, "barfoo")
+			p.ZAdd("foo", 0.133, "barfubar")
+			values, err := p.ZRangeByScore("foo", "(0.123", "0.132")
+			Expect(err).To(BeNil())
+			Expect(values).To(HaveLen(2))
+			Expect(values[0]).To(Equal("barfu"))
+			Expect(values[1]).To(Equal("barfoo"))
+		})
+	})
+
+	Describe("ZRangeByScoreWithScores", func() {
+		It("returns all elements by range", func() {
+			p.ZAdd("foo", 0.123, "bar")
+			p.ZAdd("foo", 0.127, "barfu")
+			p.ZAdd("foo", 0.132, "barfoo")
+			p.ZAdd("foo", 0.133, "barfubar")
+			values, err := p.ZRangeByScoreWithScores("foo", "(0.123", "0.132")
+			Expect(err).To(BeNil())
+			Expect(values).To(HaveLen(2))
+			Expect(values[0].Value).To(Equal("barfu"))
+			Expect(values[0].Score).To(Equal(0.127))
+			Expect(values[1].Value).To(Equal("barfoo"))
+			Expect(values[1].Score).To(Equal(0.132))
+		})
+	})
+
+	Describe("ZRangeByScoreWithLimit", func() {
+		It("returns all elements by range", func() {
+			p.ZAdd("foo", 0.123, "bar")
+			p.ZAdd("foo", 0.127, "barfu")
+			p.ZAdd("foo", 0.132, "barfoo")
+			p.ZAdd("foo", 0.133, "barfubar")
+			values, err := p.ZRangeByScoreWithLimit("foo", "(0.123", "0.132", 1, 1)
+			Expect(err).To(BeNil())
+			Expect(values).To(HaveLen(1))
+			Expect(values[0]).To(Equal("barfoo"))
+		})
+	})
+
+	Describe("ZRangeByScoreWithScoresWithLimit", func() {
+		It("returns all elements by range", func() {
+			p.ZAdd("foo", 0.123, "bar")
+			p.ZAdd("foo", 0.127, "barfu")
+			p.ZAdd("foo", 0.132, "barfoo")
+			p.ZAdd("foo", 0.133, "barfubar")
+			values, err := p.ZRangeByScoreWithScoresWithLimit("foo", "(0.123", "0.132", 1, 1)
+			Expect(err).To(BeNil())
+			Expect(values).To(HaveLen(1))
+			Expect(values[0].Value).To(Equal("barfoo"))
+			Expect(values[0].Score).To(Equal(0.132))
+		})
+	})
 })
