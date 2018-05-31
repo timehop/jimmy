@@ -221,6 +221,7 @@ type HyperLogLogBatchCommands interface {
 }
 
 type ScanCommands interface {
+	Scan(cursor int, match string, count int) (nextCursor int, matches []string, err error)
 	SScan(key string, cursor int, match string, count int) (nextCursor int, matches []string, err error)
 	ZScan(key string, cursor int, match string, count int) (nextCursor int, matches []string, scores []float64, err error)
 }
