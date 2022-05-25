@@ -3,10 +3,9 @@ module github.com/timehop/jimmy
 go 1.18
 
 require (
-	github.com/garyburd/redigo v1.3.0
+	github.com/gomodule/redigo v1.8.8
 	github.com/onsi/ginkgo v1.4.0
 	github.com/onsi/gomega v1.2.0
-	github.com/soveran/redisurl v0.0.0-20130520141537-ac42ec99510b
 )
 
 require (

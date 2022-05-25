@@ -6,7 +6,7 @@ import (
 	netURL "net/url"
 	"strconv"
 
-	redigo "github.com/garyburd/redigo/redis"
+	redigo "github.com/gomodule/redigo/redis"
 )
 
 type Connection interface {
