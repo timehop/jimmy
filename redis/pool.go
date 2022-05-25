@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	redigo "github.com/garyburd/redigo/redis"
-	"github.com/soveran/redisurl"
+	redigo "github.com/gomodule/redigo/redis"
+	"github.com/timehop/jimmy/redis/redisurl"
 )
 
 const Unlimited = 0

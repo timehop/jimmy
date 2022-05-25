@@ -1,7 +1,7 @@
 package redis
 
 import (
-	redigo "github.com/garyburd/redigo/redis"
+	redigo "github.com/gomodule/redigo/redis"
 )
 
 var (

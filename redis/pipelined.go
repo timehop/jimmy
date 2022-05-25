@@ -3,7 +3,7 @@ package redis
 import (
 	"errors"
 
-	redigo "github.com/garyburd/redigo/redis"
+	redigo "github.com/gomodule/redigo/redis"
 )
 
 type Pipeline interface {
