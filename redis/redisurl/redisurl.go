@@ -17,13 +17,11 @@ func Connect() (redis.Conn, error) {
 
 func ConnectToURL(s string) (c redis.Conn, err error) {
 	redisURL, err := url.Parse(s)
-
 	if err != nil {
-		return
+		return c, err
 	}
 
 	auth := ""
-
 	if redisURL.User != nil {
 		if password, ok := redisURL.User.Password(); ok {
 			auth = password
@@ -31,25 +29,26 @@ func ConnectToURL(s string) (c redis.Conn, err error) {
 	}
 
 	c, err = redis.Dial("tcp", redisURL.Host)
-
 	if err != nil {
 		fmt.Println(err)
-		return
+		return c, err
 	}
 
 	if len(auth) > 0 {
 		_, err = c.Do("AUTH", auth)
-
 		if err != nil {
 			fmt.Println(err)
-			return
+			return c, err
 		}
 	}
 
 	if len(redisURL.Path) > 1 {
 		db := strings.TrimPrefix(redisURL.Path, "/")
-		c.Do("SELECT", db)
+		_, err = c.Do("SELECT", db)
+		if err != nil {
+			return c, err
+		}
 	}
 
-	return
+	return c, err
 }
