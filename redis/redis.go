@@ -7,8 +7,9 @@ import (
 var (
 	ErrNil = redigo.ErrNil
 
-	redigoErrNoAuth   = redigo.Error("NOAUTH Authentication required.")
-	redigoErrSentAuth = redigo.Error("ERR Client sent AUTH, but no password is set")
+	redigoErrNoAuth    = redigo.Error("NOAUTH Authentication required.")
+	redigoErrSentAuth  = redigo.Error("ERR Client sent AUTH, but no password is set")
+	redigoErrSentAuth2 = redigo.Error("ERR AUTH <password> called without any password configured for the default user. Are you sure your configuration is correct?")
 )
 
 type Z struct {

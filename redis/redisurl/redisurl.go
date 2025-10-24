@@ -18,7 +18,7 @@ func Connect() (redis.Conn, error) {
 func ConnectToURL(s string) (c redis.Conn, err error) {
 	redisURL, err := url.Parse(s)
 	if err != nil {
-		return c, err
+		return nil, err
 	}
 
 	auth := ""
@@ -31,7 +31,7 @@ func ConnectToURL(s string) (c redis.Conn, err error) {
 	c, err = redis.Dial("tcp", redisURL.Host)
 	if err != nil {
 		fmt.Println(err)
-		return c, err
+		return nil, err
 	}
 
 	if len(auth) > 0 {

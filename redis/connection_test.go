@@ -2,7 +2,6 @@ package redis_test
 
 import (
 	"fmt"
-
 	netURL "net/url"
 
 	. "github.com/onsi/ginkgo"
