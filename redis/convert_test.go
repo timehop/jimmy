@@ -2,85 +2,93 @@ package redis
 
 import (
 	"errors"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"testing"
 )
 
-// TODO: this mostly tests error cases. Add tests for success cases!
-
-var _ = Describe("stringMap", func() {
-	Context("A nil slice arg and a nil error arg", func() {
-		It("returns nil and an error", func() {
-			result, err := stringMap(nil, nil)
-			Expect(err).ToNot(BeNil())
-			Expect(result).To(BeNil())
-		})
+func TestStringMap(t *testing.T) {
+	t.Run("nil slice and nil error returns error", func(t *testing.T) {
+		result, err := stringMap(nil, nil)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if result != nil {
+			t.Errorf("expected nil result, got %v", result)
+		}
 	})
 
-	Context("A nil slice arg and a non-nil error arg", func() {
-		It("returns nil and the error that was passed in", func() {
-			inputErr := errors.New("The cheese is old and moldy, where is the bathroom?")
-			result, err := stringMap(nil, inputErr)
-			Expect(err).To(Equal(inputErr))
-			Expect(&err).To(Equal(&inputErr))
-			Expect(result).To(BeNil())
-		})
+	t.Run("nil slice and non-nil error returns that error", func(t *testing.T) {
+		inputErr := errors.New("The cheese is old and moldy, where is the bathroom?")
+		result, err := stringMap(nil, inputErr)
+		if err != inputErr {
+			t.Errorf("got %v, want %v", err, inputErr)
+		}
+		if result != nil {
+			t.Errorf("expected nil result, got %v", result)
+		}
 	})
 
-	Context("An odd-length slice arg and a nil error arg", func() {
-		It("returns nil and an error", func() {
-			result, err := stringMap([]string{"foo"}, nil)
-			Expect(err).ToNot(BeNil())
-			Expect(result).To(BeNil())
-		})
+	t.Run("odd-length slice and nil error returns error", func(t *testing.T) {
+		result, err := stringMap([]string{"foo"}, nil)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if result != nil {
+			t.Errorf("expected nil result, got %v", result)
+		}
 	})
 
-	Context("An odd-length slice arg and a non-nil error arg", func() {
-		It("returns nil and the error that was passed in", func() {
-			inputErr := errors.New("The cheese is old and moldy, where is the bathroom?")
-			result, err := stringMap([]string{"foo"}, inputErr)
-			Expect(err).To(Equal(inputErr))
-			Expect(&err).To(Equal(&inputErr))
-			Expect(result).To(BeNil())
-		})
+	t.Run("odd-length slice and non-nil error returns that error", func(t *testing.T) {
+		inputErr := errors.New("The cheese is old and moldy, where is the bathroom?")
+		result, err := stringMap([]string{"foo"}, inputErr)
+		if err != inputErr {
+			t.Errorf("got %v, want %v", err, inputErr)
+		}
+		if result != nil {
+			t.Errorf("expected nil result, got %v", result)
+		}
 	})
-})
+}
 
-var _ = Describe("spliceMap", func() {
-	Context("All nil args", func() {
-		It("returns nil and an error", func() {
-			result, err := spliceMap(nil, nil, nil)
-			Expect(err).ToNot(BeNil())
-			Expect(result).To(BeNil())
-		})
-	})
-
-	Context("nil keys, nil vals, and a non-nil error", func() {
-		It("returns nil and the error that was passed in", func() {
-			inputErr := errors.New("The cheese is old and moldy, where is the bathroom?")
-			result, err := spliceMap(nil, nil, inputErr)
-			Expect(err).To(Equal(inputErr))
-			Expect(&err).To(Equal(&inputErr))
-			Expect(result).To(BeNil())
-		})
+func TestSpliceMap(t *testing.T) {
+	t.Run("all nil args returns error", func(t *testing.T) {
+		result, err := spliceMap(nil, nil, nil)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if result != nil {
+			t.Errorf("expected nil result, got %v", result)
+		}
 	})
 
-	Context("2 keys, 1 val, and a nil error", func() {
-		It("returns nil and an error", func() {
-			result, err := spliceMap([]string{"foo", "bar"}, []string{"baz"}, nil)
-			Expect(err).ToNot(BeNil())
-			Expect(result).To(BeNil())
-		})
+	t.Run("nil keys nil vals and non-nil error returns that error", func(t *testing.T) {
+		inputErr := errors.New("The cheese is old and moldy, where is the bathroom?")
+		result, err := spliceMap(nil, nil, inputErr)
+		if err != inputErr {
+			t.Errorf("got %v, want %v", err, inputErr)
+		}
+		if result != nil {
+			t.Errorf("expected nil result, got %v", result)
+		}
 	})
 
-	Context("1 key, 2 vals, and a non-nil error arg", func() {
-		It("returns nil and the error that was passed in", func() {
-			inputErr := errors.New("The cheese is old and moldy, where is the bathroom?")
-			result, err := spliceMap([]string{"foo"}, []string{"foo", "bar"}, inputErr)
-			Expect(err).To(Equal(inputErr))
-			Expect(&err).To(Equal(&inputErr))
-			Expect(result).To(BeNil())
-		})
+	t.Run("2 keys 1 val and nil error returns error", func(t *testing.T) {
+		result, err := spliceMap([]string{"foo", "bar"}, []string{"baz"}, nil)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if result != nil {
+			t.Errorf("expected nil result, got %v", result)
+		}
 	})
-})
+
+	t.Run("1 key 2 vals and non-nil error returns that error", func(t *testing.T) {
+		inputErr := errors.New("The cheese is old and moldy, where is the bathroom?")
+		result, err := spliceMap([]string{"foo"}, []string{"foo", "bar"}, inputErr)
+		if err != inputErr {
+			t.Errorf("got %v, want %v", err, inputErr)
+		}
+		if result != nil {
+			t.Errorf("expected nil result, got %v", result)
+		}
+	})
+}
