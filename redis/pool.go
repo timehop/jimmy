@@ -50,11 +50,11 @@ func (m *hosts) Get(host string) bool {
 }
 
 func generateConnection(url *netURL.URL) (redigo.Conn, error) {
-	// Then we expec the server to not ask for a password
+	// Then we expect the server to not ask for a password
 	if hostsNotUsingAuth.Get(url.Host) {
 		url.User = nil
 		conn, err := redisurl.ConnectToURL(url.String())
-		if err == redigoErrNoAuth {
+		if errors.Is(err, redigoErrNoAuth) {
 			hostsNotUsingAuth.Remove(url.Host)
 			return generateConnection(url)
 		}
@@ -63,7 +63,7 @@ func generateConnection(url *netURL.URL) (redigo.Conn, error) {
 
 	// Then we expect the server to potentially ask for a password
 	conn, err := redisurl.ConnectToURL(url.String())
-	if err == redigoErrSentAuth {
+	if errors.Is(err, redigoErrSentAuth) || errors.Is(err, redigoErrSentAuth2) {
 		hostsNotUsingAuth.Add(url.Host)
 		return generateConnection(url)
 	}

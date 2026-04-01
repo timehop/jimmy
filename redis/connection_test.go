@@ -2,355 +2,527 @@ package redis_test
 
 import (
 	"fmt"
-
 	netURL "net/url"
+	"testing"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/timehop/jimmy/redis"
 )
 
-var _ = Describe("Connection", func() {
-
+func TestConnection(t *testing.T) {
 	// Using an arbitrary password should fallback to using no password
 	url := "redis://:foopass@localhost:6379/12"
 	parsedURL, _ := netURL.Parse(url)
 	c, err := redis.NewConnection(parsedURL)
 	if err != nil {
-		panic(err)
+		t.Fatalf("failed to create connection: %v", err)
 	}
 
-	BeforeEach(func() {
+	flushDB := func() {
 		c.Do("FLUSHDB")
-	})
+	}
 
-	Describe("NewConnection", func() {
-		// Assumes redis' default state is auth-less
-
-		Context("server has no auth set", func() {
-			It("should ping without auth", func() {
+	t.Run("NewConnection", func(t *testing.T) {
+		t.Run("server has no auth set", func(t *testing.T) {
+			t.Run("should ping without auth", func(t *testing.T) {
+				flushDB()
 				url := "redis://localhost:6379"
 				parsedURL, _ := netURL.Parse(url)
 				c, err := redis.NewConnection(parsedURL)
-				Expect(err).To(BeNil())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 
 				_, err = c.Do("PING")
-				Expect(err).To(BeNil())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 			})
-			It("should fallback to ping without auth", func() {
+
+			t.Run("should fallback to ping without auth", func(t *testing.T) {
+				flushDB()
 				url := "redis://user:testpass@localhost:6379"
 				parsedURL, _ := netURL.Parse(url)
 				c, err := redis.NewConnection(parsedURL)
-				Expect(err).To(BeNil())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 
 				_, err = c.Do("PING")
-				Expect(err).To(BeNil())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 			})
 		})
 
-		Context("server requires auth", func() {
-			BeforeEach(func() {
+		t.Run("server requires auth", func(t *testing.T) {
+			setupAuth := func() {
 				url := "redis://localhost:6379"
 				parsedURL, _ := netURL.Parse(url)
 				c, _ := redis.NewConnection(parsedURL)
 				c.Do("CONFIG", "SET", "requirepass", "testpass")
-			})
-			AfterEach(func() {
+			}
+			teardownAuth := func() {
 				url := "redis://:testpass@localhost:6379"
 				parsedURL, _ := netURL.Parse(url)
 				c, _ := redis.NewConnection(parsedURL)
 				c.Do("CONFIG", "SET", "requirepass", "")
-			})
+			}
 
-			It("should fail to ping without auth", func() {
+			t.Run("should fail to ping without auth", func(t *testing.T) {
+				flushDB()
+				setupAuth()
+				t.Cleanup(teardownAuth)
+
 				url := "redis://localhost:6379"
 				parsedURL, _ := netURL.Parse(url)
 				c, _ := redis.NewConnection(parsedURL)
 
 				_, err := c.Do("PING")
-				Expect(err).ToNot(BeNil())
+				if err == nil {
+					t.Error("expected error, got nil")
+				}
 			})
-			It("should successfully ping with auth", func() {
+
+			t.Run("should successfully ping with auth", func(t *testing.T) {
+				flushDB()
+				setupAuth()
+				t.Cleanup(teardownAuth)
+
 				url := "redis://:testpass@localhost:6379"
 				parsedURL, _ := netURL.Parse(url)
 				c, _ := redis.NewConnection(parsedURL)
 
 				_, err := c.Do("PING")
-				Expect(err).To(BeNil())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 			})
 		})
 	})
 
-	Describe("DEL", func() {
-		Context("Where no key exists", func() {
-			It("Should return 0 with no error.", func() {
-				i, err := c.Del("doesnotexist")
-				Expect(i).To(Equal(0))
-				Expect(err).To(BeNil())
-			})
+	t.Run("DEL", func(t *testing.T) {
+		t.Run("no key exists returns 0", func(t *testing.T) {
+			flushDB()
+			i, err := c.Del("doesnotexist")
+			if i != 0 {
+				t.Errorf("got %d, want 0", i)
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 		})
-		Context("Where a key exists", func() {
-			It("Should return 1 with no error.", func() {
-				c.Set("exists", "The best leaders know when to follow.")
-				i, err := c.Del("exists")
-				Expect(i).To(Equal(1))
-				Expect(err).To(BeNil())
-			})
+
+		t.Run("key exists returns 1", func(t *testing.T) {
+			flushDB()
+			c.Set("exists", "The best leaders know when to follow.")
+			i, err := c.Del("exists")
+			if i != 1 {
+				t.Errorf("got %d, want 1", i)
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 		})
 	})
 
-	Describe("TTL", func() {
-		Context("Without a key.", func() {
-			It("Should return -2.", func() {
-				i, err := c.TTL("foo")
-				Expect(err).To(BeNil())
-				Expect(i).To(Equal(-2))
-			})
+	t.Run("TTL", func(t *testing.T) {
+		t.Run("without key returns -2", func(t *testing.T) {
+			flushDB()
+			i, err := c.TTL("foo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if i != -2 {
+				t.Errorf("got %d, want -2", i)
+			}
 		})
-		Context("With a key without an expiration.", func() {
-			It("Should return -1.", func() {
-				c.Set("foo", "bar")
 
-				i, err := c.TTL("foo")
-				Expect(err).To(BeNil())
-				Expect(i).To(Equal(-1))
-			})
+		t.Run("key without expiration returns -1", func(t *testing.T) {
+			flushDB()
+			c.Set("foo", "bar")
+
+			i, err := c.TTL("foo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if i != -1 {
+				t.Errorf("got %d, want -1", i)
+			}
 		})
-		Context("With a key with an expiration.", func() {
-			It("Should return the time to live.", func() {
-				c.SetEx("biz", "baz", 15)
 
-				i, err := c.TTL("biz")
-				Expect(err).To(BeNil())
-				Expect(i).To(Equal(15))
-			})
+		t.Run("key with expiration returns ttl", func(t *testing.T) {
+			flushDB()
+			c.SetEx("biz", "baz", 15)
+
+			i, err := c.TTL("biz")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if i != 15 {
+				t.Errorf("got %d, want 15", i)
+			}
 		})
 	})
 
-	Describe("PFAdd", func() {
-		It("Should indicate HyperLogLog register was altered (ie: 1)", func() {
+	t.Run("PFAdd", func(t *testing.T) {
+		t.Run("should indicate HyperLogLog register was altered", func(t *testing.T) {
+			flushDB()
 			i, err := c.PFAdd("_tests:jimmy:redis:foo1", "bar")
-			Expect(err).To(BeNil())
-			Expect(i).To(Equal(1))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if i != 1 {
+				t.Errorf("got %d, want 1", i)
+			}
 		})
-		It("Should indicate HyperLogLog register was not altered (ie: 0)", func() {
+
+		t.Run("should indicate HyperLogLog register was not altered", func(t *testing.T) {
+			flushDB()
 			_, err := c.PFAdd("_tests:jimmy:redis:foo2", "bar")
-			Expect(err).To(BeNil())
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 			i, err := c.PFAdd("_tests:jimmy:redis:foo2", "bar")
-			Expect(err).To(BeNil())
-			Expect(i).To(Equal(0))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if i != 0 {
+				t.Errorf("got %d, want 0", i)
+			}
 		})
 	})
 
-	Describe("PFCount", func() {
-		It("Should return the approximate cardinality of the HLL", func() {
+	t.Run("PFCount", func(t *testing.T) {
+		t.Run("should return approximate cardinality", func(t *testing.T) {
+			flushDB()
 			var actualCardinality float64 = 20000
 			for i := 0; float64(i) < actualCardinality; i++ {
 				_, err := c.PFAdd("_tests:jimmy:redis:foo3", fmt.Sprint(i))
-				Expect(err).To(BeNil())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 			}
 			card, err := c.PFCount("_tests:jimmy:redis:foo3")
-			Expect(err).To(BeNil())
-			// Check a VERY rough 20% accuracy
-			Expect(float64(card)).To(BeNumerically("<", actualCardinality*1.2))
-			Expect(float64(card)).To(BeNumerically(">", actualCardinality*(1-0.2)))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if float64(card) >= actualCardinality*1.2 {
+				t.Errorf("cardinality %d too high (max %v)", card, actualCardinality*1.2)
+			}
+			if float64(card) <= actualCardinality*0.8 {
+				t.Errorf("cardinality %d too low (min %v)", card, actualCardinality*0.8)
+			}
 		})
 	})
 
-	Describe("PFMerge", func() {
-		It("Should return the approximate cardinality of the union of multiple HLLs", func() {
+	t.Run("PFMerge", func(t *testing.T) {
+		t.Run("should return approximate cardinality of union", func(t *testing.T) {
+			flushDB()
 			setA := []int{1, 2, 3, 4, 5}
 			setB := []int{3, 4, 5, 6, 7}
 			setC := []int{8, 9, 10, 11, 12}
 
 			for _, x := range setA {
 				_, err := c.PFAdd("_tests:jimmy:redis:hll1", fmt.Sprint(x))
-				Expect(err).To(BeNil())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 			}
-
 			for _, x := range setB {
 				_, err := c.PFAdd("_tests:jimmy:redis:hll2", fmt.Sprint(x))
-				Expect(err).To(BeNil())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 			}
-
 			for _, x := range setC {
 				_, err := c.PFAdd("_tests:jimmy:redis:hll3", fmt.Sprint(x))
-				Expect(err).To(BeNil())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 			}
 
 			for i := 1; i < 4; i++ {
 				card, err := c.PFCount(fmt.Sprintf("_tests:jimmy:redis:hll%d", i))
-				Expect(err).To(BeNil())
-				Expect(card).To(Equal(5))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if card != 5 {
+					t.Errorf("hll%d: got %d, want 5", i, card)
+				}
 			}
 
 			ok, err := c.PFMerge("_tests:jimmy:redis:hll1+2", "_tests:jimmy:redis:hll1", "_tests:jimmy:redis:hll2")
-			Expect(err).To(BeNil())
-			Expect(ok).To(BeTrue())
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !ok {
+				t.Error("expected true, got false")
+			}
 
 			card, err := c.PFCount("_tests:jimmy:redis:hll1+2")
-			Expect(err).To(BeNil())
-			Expect(card).To(Equal(7))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if card != 7 {
+				t.Errorf("got %d, want 7", card)
+			}
 
 			ok, err = c.PFMerge("_tests:jimmy:redis:hll1+3", "_tests:jimmy:redis:hll1", "_tests:jimmy:redis:hll3")
-			Expect(err).To(BeNil())
-			Expect(ok).To(BeTrue())
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !ok {
+				t.Error("expected true, got false")
+			}
 
 			card, err = c.PFCount("_tests:jimmy:redis:hll1+3")
-			Expect(err).To(BeNil())
-			Expect(card).To(Equal(10))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if card != 10 {
+				t.Errorf("got %d, want 10", card)
+			}
 
 			ok, err = c.PFMerge("_tests:jimmy:redis:hll1+2+3", "_tests:jimmy:redis:hll1", "_tests:jimmy:redis:hll2", "_tests:jimmy:redis:hll3")
-			Expect(err).To(BeNil())
-			Expect(ok).To(BeTrue())
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !ok {
+				t.Error("expected true, got false")
+			}
 
 			card, err = c.PFCount("_tests:jimmy:redis:hll1+2+3")
-			Expect(err).To(BeNil())
-			Expect(card).To(Equal(12))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if card != 12 {
+				t.Errorf("got %d, want 12", card)
+			}
 		})
 	})
 
-	Describe("LTrim", func() {
-		Context("When a list is trimmed", func() {
-			It("Trims the list", func() {
-				key := "_tests:jimmy:redis:list"
+	t.Run("LTrim", func(t *testing.T) {
+		t.Run("when a list is trimmed", func(t *testing.T) {
+			flushDB()
+			key := "_tests:jimmy:redis:list"
 
-				for i := 0; i < 5; i++ {
-					c.LPush(key, fmt.Sprint(i))
+			for i := range 5 {
+				c.LPush(key, fmt.Sprint(i))
+			}
+
+			size, err := c.LLen(key)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if size != 5 {
+				t.Errorf("got %d, want 5", size)
+			}
+
+			// Trim nothing
+			err = c.LTrim(key, 0, 4)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			size, err = c.LLen(key)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if size != 5 {
+				t.Errorf("got %d, want 5", size)
+			}
+
+			// Trim first element
+			err = c.LTrim(key, 1, 5)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			size, err = c.LLen(key)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if size != 4 {
+				t.Errorf("got %d, want 4", size)
+			}
+
+			item, err := c.LPop(key)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if item != "3" {
+				t.Errorf("got %q, want %q", item, "3")
+			}
+
+			// Trim last element
+			err = c.LTrim(key, -4, -1)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			size, err = c.LLen(key)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if size != 3 {
+				t.Errorf("got %d, want 3", size)
+			}
+
+			item, err = c.LPop(key)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if item != "2" {
+				t.Errorf("got %q, want %q", item, "2")
+			}
+		})
+
+		t.Run("when a not-list is trimmed returns error", func(t *testing.T) {
+			flushDB()
+			key := "_tests:jimmy:redis:not-list"
+
+			if err := c.Set(key, "yay"); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if err := c.LTrim(key, 0, 4); err == nil {
+				t.Error("expected error, got nil")
+			}
+
+			c.Del(key)
+			_, err := c.SAdd(key, "yay")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if err := c.LTrim(key, 0, 4); err == nil {
+				t.Error("expected error, got nil")
+			}
+		})
+	})
+
+	t.Run("LRange", func(t *testing.T) {
+		t.Run("empty list returns nothing", func(t *testing.T) {
+			flushDB()
+			key := "_tests:jimmy:redis:list"
+			things, err := c.LRange(key, 0, -1)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(things) != 0 {
+				t.Errorf("expected empty, got %v", things)
+			}
+		})
+
+		t.Run("list returns items", func(t *testing.T) {
+			flushDB()
+			key := "_tests:jimmy:redis:list"
+			for i := range 5 {
+				_, err := c.LPush(key, fmt.Sprint(i))
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
 				}
+			}
 
-				size, err := c.LLen(key)
-				Expect(err).To(BeNil())
-				Expect(size).To(Equal(5))
+			things, err := c.LRange(key, 0, -1)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(things) != 5 {
+				t.Errorf("got len %d, want 5", len(things))
+			}
 
-				// Trim nothing
-				err = c.LTrim(key, 0, 4)
-				Expect(err).To(BeNil())
+			things, err = c.LRange(key, 0, 0)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(things) != 1 {
+				t.Errorf("got len %d, want 1", len(things))
+			}
+			if things[0] != "4" {
+				t.Errorf("got %q, want %q", things[0], "4")
+			}
 
-				size, err = c.LLen(key)
-				Expect(err).To(BeNil())
-				Expect(size).To(Equal(5))
-
-				// Trim first element
-				err = c.LTrim(key, 1, 5)
-				Expect(err).To(BeNil())
-
-				size, err = c.LLen(key)
-				Expect(err).To(BeNil())
-				Expect(size).To(Equal(4))
-
-				item, err := c.LPop(key)
-				Expect(err).To(BeNil())
-				Expect(item).To(Equal("3"))
-
-				// Trim last element
-				err = c.LTrim(key, -4, -1)
-				Expect(err).To(BeNil())
-
-				size, err = c.LLen(key)
-				Expect(err).To(BeNil())
-				Expect(size).To(Equal(3))
-
-				item, err = c.LPop(key)
-				Expect(err).To(BeNil())
-				Expect(item).To(Equal("2"))
-			})
-		})
-
-		Context("When a not-list is trimmed", func() {
-			It("Returns an error", func() {
-				key := "_tests:jimmy:redis:not-list"
-
-				Expect(c.Set(key, "yay")).To(BeNil())
-				Expect(c.LTrim(key, 0, 4)).ToNot(BeNil())
-
-				c.Del(key)
-				_, err := c.SAdd(key, "yay")
-				Expect(err).To(BeNil())
-				Expect(c.LTrim(key, 0, 4)).ToNot(BeNil())
-			})
+			things, err = c.LRange(key, -1, -1)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(things) != 1 {
+				t.Errorf("got len %d, want 1", len(things))
+			}
+			if things[0] != "0" {
+				t.Errorf("got %q, want %q", things[0], "0")
+			}
 		})
 	})
 
-	Describe("LRange", func() {
-		Context("When an empty list is ranged", func() {
-			It("Returns nothing, but no err", func() {
-				key := "_tests:jimmy:redis:list"
-				things, err := c.LRange(key, 0, -1)
-				Expect(err).To(BeNil())
-				Expect(things).To(BeEmpty())
-			})
-		})
-
-		Context("When a list is ranged", func() {
-			It("Returns the items", func() {
-				key := "_tests:jimmy:redis:list"
-				for i := 0; i < 5; i++ {
-					_, err := c.LPush(key, fmt.Sprint(i))
-					Expect(err).To(BeNil())
-				}
-
-				things, err := c.LRange(key, 0, -1)
-				Expect(err).To(BeNil())
-				Expect(len(things)).To(Equal(5))
-
-				things, err = c.LRange(key, 0, 0)
-				Expect(err).To(BeNil())
-				Expect(len(things)).To(Equal(1))
-				Expect(things[0]).To(Equal("4"))
-
-				things, err = c.LRange(key, -1, -1)
-				Expect(err).To(BeNil())
-				Expect(len(things)).To(Equal(1))
-				Expect(things[0]).To(Equal("0"))
-			})
-		})
-	})
-
-	Describe("SMove", func() {
-		It("Should move the member to the other set", func() {
+	t.Run("SMove", func(t *testing.T) {
+		t.Run("should move member to other set", func(t *testing.T) {
+			flushDB()
 			key := "_tests:jimmy:redis:smove"
 
 			c.SAdd(key+":a", "foobar")
 
 			moved, err := c.SMove(key+":a", key+":b", "foobar")
-			Expect(err).To(BeNil())
-			Expect(moved).To(BeTrue())
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !moved {
+				t.Error("expected true, got false")
+			}
 
 			members, _ := c.SMembers(key + ":a")
-			Expect(len(members)).To(Equal(0))
+			if len(members) != 0 {
+				t.Errorf("got len %d, want 0", len(members))
+			}
 
 			members, _ = c.SMembers(key + ":b")
-			Expect(members).To(Equal([]string{"foobar"}))
+			if len(members) != 1 || members[0] != "foobar" {
+				t.Errorf("got %v, want [foobar]", members)
+			}
 		})
 	})
 
-	Describe("SETNX", func() {
-		It("Should not set an existing key.", func() {
+	t.Run("SETNX", func(t *testing.T) {
+		t.Run("should not set existing key", func(t *testing.T) {
+			flushDB()
 			key := "_tests:jimmy:redis:setnx.existing"
 			c.Set(key, "foo")
 
 			ok, err := c.SetNX(key, "bar")
-			Expect(err).To(BeNil())
-			Expect(ok).To(Equal(false))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if ok {
+				t.Error("expected false, got true")
+			}
 
 			foo, _ := c.Get(key)
-			Expect(foo).To(Equal("foo"))
+			if foo != "foo" {
+				t.Errorf("got %q, want %q", foo, "foo")
+			}
 		})
-		It("Should set a non-existent key.", func() {
+
+		t.Run("should set non-existent key", func(t *testing.T) {
+			flushDB()
 			key := "_tests:jimmy:redis:setnx.notexisting"
 
 			ok, err := c.SetNX(key, "bar")
-			Expect(err).To(BeNil())
-			Expect(ok).To(Equal(true))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !ok {
+				t.Error("expected true, got false")
+			}
 
 			foo, _ := c.Get(key)
-			Expect(foo).To(Equal("bar"))
+			if foo != "bar" {
+				t.Errorf("got %q, want %q", foo, "bar")
+			}
 		})
 	})
 
-	Describe("ZScan", func() {
-		It("Should scan the sorted set", func() {
+	t.Run("ZScan", func(t *testing.T) {
+		t.Run("should scan the sorted set", func(t *testing.T) {
+			flushDB()
 			key := "_tests:jimmy:redis:zscan"
 
 			c.ZAdd(key, 1, "a")
@@ -367,42 +539,41 @@ var _ = Describe("Connection", func() {
 			var err error
 
 			cursor, matches, scores, err = c.ZScan(key, cursor, "", 1)
-			Expect(err).To(BeNil())
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 			scanned = append(scanned, matches...)
 			scannedScores = append(scannedScores, scores...)
 			for cursor != 0 {
 				cursor, matches, scores, err = c.ZScan(key, cursor, "", 1)
-				Expect(err).To(BeNil())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				scanned = append(scanned, matches...)
 				scannedScores = append(scannedScores, scores...)
 			}
 
-			Expect(len(scanned)).To(Equal(5))
-			Expect(scanned).To(ContainElement("a"))
-			Expect(scanned).To(ContainElement("b"))
-			Expect(scanned).To(ContainElement("c"))
-			Expect(scanned).To(ContainElement("d"))
-			Expect(scanned).To(ContainElement("e"))
-
-			for i, elem := range scanned {
-				switch elem {
-				case "a":
-					Expect(scannedScores[i]).To(Equal(float64(1)))
-				case "b":
-					Expect(scannedScores[i]).To(Equal(float64(2)))
-				case "c":
-					Expect(scannedScores[i]).To(Equal(float64(3)))
-				case "d":
-					Expect(scannedScores[i]).To(Equal(float64(4)))
-				case "e":
-					Expect(scannedScores[i]).To(Equal(float64(5)))
+			if len(scanned) != 5 {
+				t.Errorf("got len %d, want 5", len(scanned))
+			}
+			for _, want := range []string{"a", "b", "c", "d", "e"} {
+				if !containsString(scanned, want) {
+					t.Errorf("expected %q in %v", want, scanned)
 				}
 			}
 
+			expectedScores := map[string]float64{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5}
+			for i, elem := range scanned {
+				if scannedScores[i] != expectedScores[elem] {
+					t.Errorf("%s: got score %v, want %v", elem, scannedScores[i], expectedScores[elem])
+				}
+			}
 		})
 	})
 
-	Describe("SScan", func() {
-		It("Should scan the set", func() {
+	t.Run("SScan", func(t *testing.T) {
+		t.Run("should scan the set", func(t *testing.T) {
+			flushDB()
 			key := "_tests:jimmy:redis:sscan"
 
 			c.SAdd(key, "a", "b", "c", "d", "e")
@@ -413,321 +584,459 @@ var _ = Describe("Connection", func() {
 			var err error
 
 			cursor, matches, err = c.SScan(key, cursor, "", 1)
-			Expect(err).To(BeNil())
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 			scanned = append(scanned, matches...)
 			for cursor != 0 {
 				cursor, matches, err = c.SScan(key, cursor, "", 1)
-				Expect(err).To(BeNil())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 				scanned = append(scanned, matches...)
 			}
 
-			Expect(len(scanned)).To(Equal(5))
-			Expect(scanned).To(ContainElement("a"))
-			Expect(scanned).To(ContainElement("b"))
-			Expect(scanned).To(ContainElement("c"))
-			Expect(scanned).To(ContainElement("d"))
-			Expect(scanned).To(ContainElement("e"))
+			if len(scanned) != 5 {
+				t.Errorf("got len %d, want 5", len(scanned))
+			}
+			for _, want := range []string{"a", "b", "c", "d", "e"} {
+				if !containsString(scanned, want) {
+					t.Errorf("expected %q in %v", want, scanned)
+				}
+			}
 		})
 	})
 
-	Describe("HGet", func() {
-		Context("a key that exists and contains a hash that contains the requested field with a value", func() {
-			It("returns the value of that field of that key", func() {
-				mustSucceed2(c.HSet("foo", "bar", "baz"))
-				val, err := c.HGet("foo", "bar")
-				Expect(err).To(BeNil())
-				Expect(val).To(Equal("baz"))
-			})
+	t.Run("HGet", func(t *testing.T) {
+		t.Run("key exists with field returns value", func(t *testing.T) {
+			flushDB()
+			if _, err := c.HSet("foo", "bar", "baz"); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			val, err := c.HGet("foo", "bar")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if val != "baz" {
+				t.Errorf("got %q, want %q", val, "baz")
+			}
 		})
 
-		Context("a key that exists and contains a hash that doesn’t contain the requested field", func() {
-			It("returns an error and an empty string", func() {
-				mustSucceed2(c.HSet("foo", "blah", "blech"))
-				val, err := c.HGet("foo", "bar")
-				Expect(err).ToNot(BeNil())
-				Expect(val).To(Equal(""))
-			})
+		t.Run("key exists without field returns error", func(t *testing.T) {
+			flushDB()
+			if _, err := c.HSet("foo", "blah", "blech"); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			val, err := c.HGet("foo", "bar")
+			if err == nil {
+				t.Error("expected error, got nil")
+			}
+			if val != "" {
+				t.Errorf("got %q, want empty string", val)
+			}
 		})
 
-		Context("a key that doesn’t exist", func() {
-			It("returns an error and an empty string", func() {
-				val, err := c.HGet("foo", "bar")
-				Expect(err).ToNot(BeNil())
-				Expect(val).To(Equal(""))
-			})
+		t.Run("key does not exist returns error", func(t *testing.T) {
+			flushDB()
+			val, err := c.HGet("foo", "bar")
+			if err == nil {
+				t.Error("expected error, got nil")
+			}
+			if val != "" {
+				t.Errorf("got %q, want empty string", val)
+			}
 		})
 
-		Context("a key that exists but doesn’t contain a hash", func() {
-			It("returns an error and an empty string", func() {
-				mustSucceed1(c.Set("foo", "yo"))
-				val, err := c.HGet("foo", "bar")
-				Expect(err).ToNot(BeNil())
-				Expect(val).To(Equal(""))
-			})
-		})
-	})
-
-	Describe("HGetAll", func() {
-		Context("a key that exists and contains 2 key/value pairs", func() {
-			It("returns the 2 pairs and no error", func() {
-				in := map[string]interface{}{
-					"bar":  "baz",
-					"blah": "blech",
-				}
-				err := c.HMSet("foo", in)
-				Expect(err).To(BeNil())
-
-				vals, err := c.HGetAll("foo")
-				Expect(err).To(BeNil())
-				Expect(vals).To(HaveLen(2))
-				Expect(vals).To(HaveKeyWithValue("bar", "baz"))
-				Expect(vals).To(HaveKeyWithValue("blah", "blech"))
-			})
-		})
-
-		Context("a key that doesn’t exist", func() {
-			It("returns an empty map and no error", func() {
-				vals, err := c.HGetAll("foo")
-				Expect(err).To(BeNil())
-				Expect(vals).To(HaveLen(0))
-			})
+		t.Run("key exists but not hash returns error", func(t *testing.T) {
+			flushDB()
+			if err := c.Set("foo", "yo"); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			val, err := c.HGet("foo", "bar")
+			if err == nil {
+				t.Error("expected error, got nil")
+			}
+			if val != "" {
+				t.Errorf("got %q, want empty string", val)
+			}
 		})
 	})
 
-	Describe("HSet", func() {
-		Context("a key that doesn’t already exist and two strings", func() {
-			It("returns true and nil and contain the new pair", func() {
-				isNew, err := c.HSet("foo", "bar", "baz")
-				Expect(err).To(BeNil())
-				Expect(isNew).To(Equal(true))
+	t.Run("HGetAll", func(t *testing.T) {
+		t.Run("key exists with 2 pairs returns pairs", func(t *testing.T) {
+			flushDB()
+			in := map[string]interface{}{"bar": "baz", "blah": "blech"}
+			err := c.HMSet("foo", in)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
-				val, err := c.HGet("foo", "bar")
-				Expect(err).To(BeNil())
-				Expect(val).To(Equal("baz"))
-			})
+			vals, err := c.HGetAll("foo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(vals) != 2 {
+				t.Errorf("got len %d, want 2", len(vals))
+			}
+			if vals["bar"] != "baz" {
+				t.Errorf("bar: got %q, want %q", vals["bar"], "baz")
+			}
+			if vals["blah"] != "blech" {
+				t.Errorf("blah: got %q, want %q", vals["blah"], "blech")
+			}
 		})
 
-		Context("a key that already exists and a field that it doesn’t already contain", func() {
-			It("returns true and nil and contain both fields", func() {
-				mustSucceed2(c.HSet("foo", "bar", "baz"))
-				isNew, err := c.HSet("foo", "yo", "oy")
-				Expect(err).To(BeNil())
-				Expect(isNew).To(Equal(true))
-
-				val, err := c.HGet("foo", "bar")
-				Expect(err).To(BeNil())
-				Expect(val).To(Equal("baz"))
-
-				val, err = c.HGet("foo", "yo")
-				Expect(err).To(BeNil())
-				Expect(val).To(Equal("oy"))
-			})
-		})
-
-		Context("a key that already exists and a field that it already contains", func() {
-			It("returns false and nil and change the value of the field", func() {
-				mustSucceed2(c.HSet("foo", "bar", "baz"))
-				isNew, err := c.HSet("foo", "bar", "yo")
-				Expect(err).To(BeNil())
-				Expect(isNew).To(Equal(false))
-
-				val, err := c.HGet("foo", "bar")
-				Expect(err).To(BeNil())
-				Expect(val).To(Equal("yo"))
-			})
-		})
-
-		Context("a key that already exists and is not a hash", func() {
-			It("returns false and an error", func() {
-				mustSucceed1(c.Set("foo", "bar"))
-				isNew, err := c.HSet("foo", "bar", "yo")
-				Expect(err).ToNot(BeNil())
-				Expect(isNew).To(Equal(false))
-
-				val, err := c.HGet("foo", "bar")
-				Expect(err).ToNot(BeNil())
-				Expect(val).To(Equal(""))
-
-				val, err = c.Get("foo")
-				Expect(err).To(BeNil())
-				Expect(val).To(Equal("bar"))
-			})
+		t.Run("key does not exist returns empty map", func(t *testing.T) {
+			flushDB()
+			vals, err := c.HGetAll("foo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(vals) != 0 {
+				t.Errorf("got len %d, want 0", len(vals))
+			}
 		})
 	})
 
-	Describe("HMGet", func() {
-		Context("a key that exists and contains the 2 specified keys", func() {
-			It("returns the 2 pairs and no error", func() {
-				in := map[string]interface{}{
-					"bar":  "baz",
-					"blah": "blech",
-				}
-				err := c.HMSet("foo", in)
-				Expect(err).To(BeNil())
+	t.Run("HSet", func(t *testing.T) {
+		t.Run("new key returns true", func(t *testing.T) {
+			flushDB()
+			isNew, err := c.HSet("foo", "bar", "baz")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !isNew {
+				t.Error("expected true, got false")
+			}
 
-				vals, err := c.HMGet("foo", "bar", "blah")
-				Expect(err).To(BeNil())
-				Expect(vals).To(HaveLen(2))
-				Expect(vals).To(HaveKeyWithValue("bar", "baz"))
-				Expect(vals).To(HaveKeyWithValue("blah", "blech"))
-			})
+			val, err := c.HGet("foo", "bar")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if val != "baz" {
+				t.Errorf("got %q, want %q", val, "baz")
+			}
 		})
 
-		Context("a key that exists and contains the 2 of the 3 specified keys", func() {
-			It("returns the 2 pairs and no error", func() {
-				in := map[string]interface{}{
-					"bar":  "baz",
-					"blah": "blech",
-				}
-				err := c.HMSet("foo", in)
-				Expect(err).To(BeNil())
+		t.Run("existing key new field returns true", func(t *testing.T) {
+			flushDB()
+			if _, err := c.HSet("foo", "bar", "baz"); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			isNew, err := c.HSet("foo", "yo", "oy")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !isNew {
+				t.Error("expected true, got false")
+			}
 
-				vals, err := c.HMGet("foo", "bar", "yo", "blah")
-				Expect(err).To(BeNil())
-				Expect(vals).To(HaveLen(3))
-				Expect(vals).To(HaveKeyWithValue("bar", "baz"))
-				Expect(vals).To(HaveKeyWithValue("yo", ""))
-				Expect(vals).To(HaveKeyWithValue("blah", "blech"))
-			})
+			val, err := c.HGet("foo", "bar")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if val != "baz" {
+				t.Errorf("got %q, want %q", val, "baz")
+			}
+
+			val, err = c.HGet("foo", "yo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if val != "oy" {
+				t.Errorf("got %q, want %q", val, "oy")
+			}
 		})
 
-		Context("a key that doesn’t exist", func() {
-			It("returns nil values and no error", func() {
-				vals, err := c.HMGet("foo", "bar", "blah")
-				Expect(err).To(BeNil())
-				Expect(vals).To(HaveLen(2))
-				Expect(vals).To(HaveKeyWithValue("bar", ""))
-				Expect(vals).To(HaveKeyWithValue("blah", ""))
-			})
+		t.Run("existing key existing field returns false", func(t *testing.T) {
+			flushDB()
+			if _, err := c.HSet("foo", "bar", "baz"); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			isNew, err := c.HSet("foo", "bar", "yo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if isNew {
+				t.Error("expected false, got true")
+			}
+
+			val, err := c.HGet("foo", "bar")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if val != "yo" {
+				t.Errorf("got %q, want %q", val, "yo")
+			}
 		})
 
-		Context("no fields", func() {
-			It("returns nil values and an error", func() {
-				vals, err := c.HMGet("foo")
-				Expect(err).ToNot(BeNil())
-				Expect(vals).To(HaveLen(0))
-			})
+		t.Run("existing key not hash returns error", func(t *testing.T) {
+			flushDB()
+			if err := c.Set("foo", "bar"); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			isNew, err := c.HSet("foo", "bar", "yo")
+			if err == nil {
+				t.Error("expected error, got nil")
+			}
+			if isNew {
+				t.Error("expected false, got true")
+			}
+
+			val, err := c.HGet("foo", "bar")
+			if err == nil {
+				t.Error("expected error, got nil")
+			}
+			if val != "" {
+				t.Errorf("got %q, want empty string", val)
+			}
+
+			val, err = c.Get("foo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if val != "bar" {
+				t.Errorf("got %q, want %q", val, "bar")
+			}
+		})
+	})
+
+	t.Run("HMGet", func(t *testing.T) {
+		t.Run("key exists with 2 specified keys", func(t *testing.T) {
+			flushDB()
+			in := map[string]interface{}{"bar": "baz", "blah": "blech"}
+			err := c.HMSet("foo", in)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			vals, err := c.HMGet("foo", "bar", "blah")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(vals) != 2 {
+				t.Errorf("got len %d, want 2", len(vals))
+			}
+			if vals["bar"] != "baz" {
+				t.Errorf("bar: got %q, want %q", vals["bar"], "baz")
+			}
+			if vals["blah"] != "blech" {
+				t.Errorf("blah: got %q, want %q", vals["blah"], "blech")
+			}
+		})
+
+		t.Run("key exists with 2 of 3 specified keys", func(t *testing.T) {
+			flushDB()
+			in := map[string]interface{}{"bar": "baz", "blah": "blech"}
+			err := c.HMSet("foo", in)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			vals, err := c.HMGet("foo", "bar", "yo", "blah")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(vals) != 3 {
+				t.Errorf("got len %d, want 3", len(vals))
+			}
+			if vals["bar"] != "baz" {
+				t.Errorf("bar: got %q, want %q", vals["bar"], "baz")
+			}
+			if vals["yo"] != "" {
+				t.Errorf("yo: got %q, want empty string", vals["yo"])
+			}
+			if vals["blah"] != "blech" {
+				t.Errorf("blah: got %q, want %q", vals["blah"], "blech")
+			}
+		})
+
+		t.Run("key does not exist", func(t *testing.T) {
+			flushDB()
+			vals, err := c.HMGet("foo", "bar", "blah")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(vals) != 2 {
+				t.Errorf("got len %d, want 2", len(vals))
+			}
+			if vals["bar"] != "" {
+				t.Errorf("bar: got %q, want empty string", vals["bar"])
+			}
+			if vals["blah"] != "" {
+				t.Errorf("blah: got %q, want empty string", vals["blah"])
+			}
+		})
+
+		t.Run("no fields returns error", func(t *testing.T) {
+			flushDB()
+			vals, err := c.HMGet("foo")
+			if err == nil {
+				t.Error("expected error, got nil")
+			}
+			if len(vals) != 0 {
+				t.Errorf("got len %d, want 0", len(vals))
+			}
 		})
 	})
 
-	Describe("HMSet", func() {
-		Context("a key that doesn’t already exist and a map with 2 string pairs", func() {
-			It("returns nil and creates the hash containing the new pairs", func() {
-				in := map[string]interface{}{
-					"bar":  "baz",
-					"blah": "blech",
-				}
-				err := c.HMSet("foo", in)
-				Expect(err).To(BeNil())
+	t.Run("HMSet", func(t *testing.T) {
+		t.Run("new key with 2 string pairs", func(t *testing.T) {
+			flushDB()
+			in := map[string]interface{}{"bar": "baz", "blah": "blech"}
+			err := c.HMSet("foo", in)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
-				vals, err := c.HGetAll("foo")
-				Expect(err).To(BeNil())
-				Expect(vals).To(HaveLen(2))
-				Expect(vals).To(HaveKeyWithValue("bar", "baz"))
-				Expect(vals).To(HaveKeyWithValue("blah", "blech"))
-			})
+			vals, err := c.HGetAll("foo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(vals) != 2 {
+				t.Errorf("got len %d, want 2", len(vals))
+			}
+			if vals["bar"] != "baz" {
+				t.Errorf("bar: got %q, want %q", vals["bar"], "baz")
+			}
+			if vals["blah"] != "blech" {
+				t.Errorf("blah: got %q, want %q", vals["blah"], "blech")
+			}
 		})
 
-		Context("a key that doesn’t already exist and a map with 2 int pairs", func() {
-			It("returns nil and creates the hash containing the new pairs", func() {
-				in := map[string]interface{}{
-					"bar":  18,
-					"blah": 42,
-				}
-				err := c.HMSet("foo", in)
-				Expect(err).To(BeNil())
+		t.Run("new key with 2 int pairs", func(t *testing.T) {
+			flushDB()
+			in := map[string]interface{}{"bar": 18, "blah": 42}
+			err := c.HMSet("foo", in)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
-				vals, err := c.HGetAll("foo")
-				Expect(err).To(BeNil())
-				Expect(vals).To(HaveLen(2))
-				Expect(vals).To(HaveKeyWithValue("bar", "18"))
-				Expect(vals).To(HaveKeyWithValue("blah", "42"))
-			})
+			vals, err := c.HGetAll("foo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(vals) != 2 {
+				t.Errorf("got len %d, want 2", len(vals))
+			}
+			if vals["bar"] != "18" {
+				t.Errorf("bar: got %q, want %q", vals["bar"], "18")
+			}
+			if vals["blah"] != "42" {
+				t.Errorf("blah: got %q, want %q", vals["blah"], "42")
+			}
 		})
 
-		Context("a key that already exists with 3 pairs and a map with 2 pairs that it already contains", func() {
-			It("returns nil and changes the hash to contain the fields with their new values, but leaves other fields alone", func() {
-				in := map[string]interface{}{
-					"bar":  18,
-					"blah": 42,
-					"yo":   "oy",
-				}
-				err := c.HMSet("foo", in)
-				Expect(err).To(BeNil())
+		t.Run("existing key with 3 pairs update 2", func(t *testing.T) {
+			flushDB()
+			in := map[string]interface{}{"bar": 18, "blah": 42, "yo": "oy"}
+			err := c.HMSet("foo", in)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
-				in = map[string]interface{}{
-					"bar":  "baz",
-					"blah": "blech",
-				}
-				err = c.HMSet("foo", in)
-				Expect(err).To(BeNil())
+			in = map[string]interface{}{"bar": "baz", "blah": "blech"}
+			err = c.HMSet("foo", in)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
-				vals, err := c.HGetAll("foo")
-				Expect(err).To(BeNil())
-				Expect(vals).To(HaveLen(3))
-				Expect(vals).To(HaveKeyWithValue("bar", "baz"))
-				Expect(vals).To(HaveKeyWithValue("blah", "blech"))
-				Expect(vals).To(HaveKeyWithValue("yo", "oy"))
-			})
+			vals, err := c.HGetAll("foo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(vals) != 3 {
+				t.Errorf("got len %d, want 3", len(vals))
+			}
+			if vals["bar"] != "baz" {
+				t.Errorf("bar: got %q, want %q", vals["bar"], "baz")
+			}
+			if vals["blah"] != "blech" {
+				t.Errorf("blah: got %q, want %q", vals["blah"], "blech")
+			}
+			if vals["yo"] != "oy" {
+				t.Errorf("yo: got %q, want %q", vals["yo"], "oy")
+			}
 		})
 
-		Context("a key that already exists and is not a hash", func() {
-			It("returns false and an error", func() {
-				mustSucceed1(c.Set("foo", "bar"))
+		t.Run("existing key not hash returns error", func(t *testing.T) {
+			flushDB()
+			if err := c.Set("foo", "bar"); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
-				in := map[string]interface{}{
-					"bar":  "baz",
-					"blah": "blech",
-				}
-				err := c.HMSet("foo", in)
-				Expect(err).ToNot(BeNil())
+			in := map[string]interface{}{"bar": "baz", "blah": "blech"}
+			err := c.HMSet("foo", in)
+			if err == nil {
+				t.Error("expected error, got nil")
+			}
 
-				val, err := c.HGet("foo", "bar")
-				Expect(err).ToNot(BeNil())
-				Expect(val).To(Equal(""))
+			val, err := c.HGet("foo", "bar")
+			if err == nil {
+				t.Error("expected error, got nil")
+			}
+			if val != "" {
+				t.Errorf("got %q, want empty string", val)
+			}
 
-				val, err = c.Get("foo")
-				Expect(err).To(BeNil())
-				Expect(val).To(Equal("bar"))
-			})
+			val, err = c.Get("foo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if val != "bar" {
+				t.Errorf("got %q, want %q", val, "bar")
+			}
 		})
 
-		Context("a key that already exists and an empty map", func() {
-			It("returns an error and doesn’t change existing the key", func() {
-				mustSucceed2(c.HSet("foo", "bar", "baz"))
-				in := map[string]interface{}{}
-				err := c.HMSet("foo", in)
-				Expect(err).ToNot(BeNil())
+		t.Run("existing key empty map returns error", func(t *testing.T) {
+			flushDB()
+			if _, err := c.HSet("foo", "bar", "baz"); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			in := map[string]interface{}{}
+			err := c.HMSet("foo", in)
+			if err == nil {
+				t.Error("expected error, got nil")
+			}
 
-				vals, err := c.HGetAll("foo")
-				Expect(err).To(BeNil())
-				Expect(vals).To(HaveLen(1))
-				Expect(vals).To(HaveKeyWithValue("bar", "baz"))
-			})
+			vals, err := c.HGetAll("foo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(vals) != 1 {
+				t.Errorf("got len %d, want 1", len(vals))
+			}
+			if vals["bar"] != "baz" {
+				t.Errorf("bar: got %q, want %q", vals["bar"], "baz")
+			}
 		})
 
-		Context("a key that doesn’t already exist and an empty map", func() {
-			It("returns an error and doesn’t create the key", func() {
-				in := map[string]interface{}{}
-				err := c.HMSet("foo", in)
-				Expect(err).ToNot(BeNil())
+		t.Run("new key empty map returns error", func(t *testing.T) {
+			flushDB()
+			in := map[string]interface{}{}
+			err := c.HMSet("foo", in)
+			if err == nil {
+				t.Error("expected error, got nil")
+			}
 
-				exists, err := c.Exists("foo")
-				Expect(err).To(BeNil())
-				Expect(exists).To(BeFalse())
-			})
+			exists, err := c.Exists("foo")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if exists {
+				t.Error("expected false, got true")
+			}
 		})
 	})
-})
-
-func mustSucceed1(err error) {
-	if err != nil {
-		Fail("Expected " + err.Error() + " to be nil")
-	}
 }
 
-func mustSucceed2(_ interface{}, err error) {
-	if err != nil {
-		Fail("Expected " + err.Error() + " to be nil")
+// containsString checks if a string slice contains a given string.
+func containsString(slice []string, s string) bool {
+	for _, v := range slice {
+		if v == s {
+			return true
+		}
 	}
+	return false
 }
+
